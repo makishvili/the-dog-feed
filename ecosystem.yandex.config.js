@@ -20,10 +20,10 @@ module.exports = {
     max_memory_restart: '500M',
     restart_delay: 4000,
     
-    // Настройки логов
-    log_file: '/home/botuser/logs/combined.log',
-    out_file: '/home/botuser/logs/out.log',
-    error_file: '/home/botuser/logs/error.log',
+    // Настройки логов - используем домашнюю директорию текущего пользователя
+    log_file: './logs/combined.log',
+    out_file: './logs/out.log',
+    error_file: './logs/error.log',
     log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
     merge_logs: true,
     
@@ -46,11 +46,11 @@ module.exports = {
   // Настройки деплоя (опционально)
   deploy: {
     production: {
-      user: 'botuser',
+      user: 'yc-user',
       host: 'your-vm-ip',
       ref: 'origin/main',
       repo: 'git@github.com:your-username/your-repo.git',
-      path: '/home/botuser/dog-feeding-bot',
+      path: '/home/yc-user/dog-feeding-bot',
       'post-deploy': 'npm install && npm run build && pm2 reload ecosystem.yandex.config.js --env production && pm2 save'
     }
   }
