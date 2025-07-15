@@ -1,0 +1,38 @@
+{
+  "name": "dog-feeding-bot",
+  "version": "1.0.0",
+  "description": "Telegram bot for dog feeding coordination",
+  "main": "dist/bot.js",
+  "scripts": {
+    "start": "node dist/bot.js",
+    "start:prod": "NODE_ENV=production node dist/bot.js",
+    "dev": "NODE_ENV=development ts-node-dev --respawn --transpile-only src/bot.ts",
+    "dev:ts": "ts-node src/bot.ts",
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "deploy": "npm run build && npm run start:prod",
+    "yc:setup": "chmod +x yandex-cloud-setup.sh && ./yandex-cloud-setup.sh",
+    "yc:deploy": "npm run build && pm2 start ecosystem.yandex.config.js && pm2 save",
+    "yc:update": "git pull && npm install && npm run build && pm2 restart dog-feeding-bot",
+    "yc:logs": "pm2 logs dog-feeding-bot",
+    "yc:status": "pm2 status",
+    "deploy:yandex": "./scripts/deploy-yandex.sh",
+    "update:yandex": "./scripts/update-yandex.sh",
+    "logs:yandex": "./scripts/logs-yandex.sh",
+    "status:yandex": "./scripts/status-yandex.sh",
+    "create-vm:yandex": "./scripts/create-vm-yandex.sh",
+    "setup-folder:yandex": "./scripts/setup-yandex-folder.sh"
+  },
+  "dependencies": {
+    "@types/sqlite3": "^5.1.0",
+    "dotenv": "^16.3.1",
+    "sqlite3": "^5.1.7",
+    "telegraf": "^4.15.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "ts-node": "^10.9.0",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.0"
+  }
+}
