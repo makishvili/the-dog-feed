@@ -35,11 +35,14 @@ if (!BOT_TOKEN) {
 
 // Переменные для webhook
 const NODE_ENV = process.env.NODE_ENV || 'development';
+// ВРЕМЕННО: принудительно используем режим разработки для избежания проблем с webhook
+const FORCE_DEVELOPMENT = true;
+const EFFECTIVE_NODE_ENV = FORCE_DEVELOPMENT ? 'development' : NODE_ENV;
 const WEBHOOK_URL = process.env.WEBHOOK_URL;
 const PORT = parseInt(process.env.PORT || '3000');
 const WEBHOOK_PATH = process.env.WEBHOOK_PATH || '/webhook';
 
-console.log(`Запуск в режиме: ${NODE_ENV}`);
+console.log(`Запуск в режиме: ${EFFECTIVE_NODE_ENV} (оригинальный: ${NODE_ENV})`);
 
 // Создание бота
 const bot = new Telegraf<BotContext>(BOT_TOKEN);
@@ -278,7 +281,7 @@ async function startBot() {
     console.log('Запуск бота...');
     
     // Выбор режима запуска в зависимости от окружения
-    if (NODE_ENV === 'production') {
+    if (EFFECTIVE_NODE_ENV === 'production') {
       // Режим webhook для продакшена
       if (!WEBHOOK_URL) {
         throw new Error('WEBHOOK_URL обязателен для продакшена');
