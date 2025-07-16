@@ -21,7 +21,8 @@
     "logs:yandex": "./scripts/logs-yandex.sh",
     "status:yandex": "./scripts/status-yandex.sh",
     "create-vm:yandex": "./scripts/create-vm-yandex.sh",
-    "setup-folder:yandex": "./scripts/setup-yandex-folder.sh"
+    "setup-folder:yandex": "./scripts/setup-yandex-folder.sh",
+    "reset-vm:yandex": "./scripts/reset-vm.sh"
   },
   "dependencies": {
     "@types/sqlite3": "^5.1.0",
