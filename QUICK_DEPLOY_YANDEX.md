@@ -86,31 +86,38 @@ npm run yc:update
 
 1. **Направьте A-запись домена на IP VM**
 
-2. **Установите nginx и SSL:**
+2. **Автоматическая настройка nginx с SSL (рекомендуется):**
+```bash
+# Скопируйте скрипт на VM
+scp scripts/setup-nginx-yandex.sh yc-user@YOUR_VM_IP:~/
+scp nginx.yandex.conf yc-user@YOUR_VM_IP:~/
+
+# Запустите автоматическую настройку
+ssh yc-user@YOUR_VM_IP
+./setup-nginx-yandex.sh yourdomain.com
+```
+
+3. **Ручная настройка (альтернатива):**
 ```bash
 sudo apt install nginx certbot python3-certbot-nginx
 sudo cp nginx.yandex.conf /etc/nginx/sites-available/dog-feeding-bot
 sudo ln -s /etc/nginx/sites-available/dog-feeding-bot /etc/nginx/sites-enabled/
-```
 
-3. **Отредактируйте конфиг:**
-```bash
+# Отредактируйте конфиг
 sudo nano /etc/nginx/sites-available/dog-feeding-bot
 # Замените your-domain.com на ваш домен
-```
 
-4. **Получите SSL сертификат:**
-```bash
+# Получите SSL сертификат
 sudo certbot --nginx -d yourdomain.com
 sudo systemctl reload nginx
 ```
 
-5. **Обновите .env:**
+4. **Обновите .env:**
 ```env
 WEBHOOK_URL=https://yourdomain.com
 ```
 
-6. **Перезапустите бота:**
+5. **Перезапустите бота:**
 ```bash
 npm run yc:update
 ```

@@ -26,14 +26,7 @@ ssh -i ~/.ssh/your_private_key yc-user@YOUR_VM_PUBLIC_IP
 
 ### Шаг 3: Настройка окружения
 
-```bash
-# Скачайте и запустите скрипт настройки
-wget https://raw.githubusercontent.com/your-repo/dog-tg-claud/main/yandex-cloud-setup.sh
-chmod +x yandex-cloud-setup.sh
-./yandex-cloud-setup.sh
-```
-
-Или выполните команды вручную:
+Выполните команды вручную:
 
 ```bash
 # Обновление системы
@@ -189,16 +182,6 @@ cp dog_feeding.db ~/backups/dog_feeding_$(date +%Y%m%d_%H%M%S).db
 echo "0 2 * * * cp ~/dog-feeding-bot/dog_feeding.db ~/backups/dog_feeding_\$(date +\%Y\%m\%d_\%H\%M\%S).db" | crontab -
 ```
 
-## Стоимость
-
-### Примерная стоимость в месяц:
-- **VM e2-micro** (2 vCPU, 2GB RAM): ~500-800₽
-- **20GB SSD**: ~100₽
-- **Публичный IP**: ~150₽
-- **Исходящий трафик** (до 1GB): бесплатно
-
-**Итого**: ~750-1000₽ в месяц
-
 ## Полезные команды
 
 ```bash
@@ -226,7 +209,18 @@ journalctl -u your-service-name -f
 4. Проверьте webhook в Telegram: вызовите `getWebhookInfo`
 
 ### Проблемы с SSL:
-Если нужен HTTPS, используйте Nginx с Let's Encrypt:
+Если нужен HTTPS, используйте автоматический скрипт настройки nginx с SSL:
+```bash
+# Скопируйте файлы на VM
+scp scripts/setup-nginx-yandex.sh yc-user@YOUR_VM_IP:~/
+scp nginx.yandex.conf yc-user@YOUR_VM_IP:~/
+
+# Запустите автоматическую настройку
+ssh yc-user@YOUR_VM_IP
+./setup-nginx-yandex.sh yourdomain.com
+```
+
+Или настройте вручную:
 ```bash
 sudo apt install nginx certbot python3-certbot-nginx
 sudo certbot --nginx -d yourdomain.com
