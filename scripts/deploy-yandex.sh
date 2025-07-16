@@ -112,7 +112,6 @@ sudo apt-get install -y git build-essential python3
 sudo npm install -g pm2
 
 # Создание директорий
-mkdir -p ~/logs
 mkdir -p ~/dog-feeding-bot
 
 echo "Зависимости установлены успешно"
@@ -143,6 +142,9 @@ npm install
 
 # Сборка проекта
 npm run build
+
+# Создание папки для логов
+mkdir -p logs
 
 echo "Проект развернут"
 EOF
