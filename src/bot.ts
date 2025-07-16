@@ -288,8 +288,37 @@ async function startBot() {
       console.log(`  URL: ${WEBHOOK_URL}${WEBHOOK_PATH}`);
       console.log(`  Port: ${PORT}`);
       
-      // Установка webhook
-      await bot.telegram.setWebhook(`${WEBHOOK_URL}${WEBHOOK_PATH}`);
+      // Проверяем текущий статус webhook
+      try {
+        const webhookInfo = await bot.telegram.getWebhookInfo();
+        const targetUrl = `${WEBHOOK_URL}${WEBHOOK_PATH}`;
+        
+        if (webhookInfo.url === targetUrl) {
+          console.log('Webhook уже установлен на правильный URL');
+        } else {
+          console.log('Установка webhook...');
+          await bot.telegram.setWebhook(targetUrl);
+          console.log('Webhook установлен успешно');
+        }
+      } catch (webhookError: any) {
+        if (webhookError.response?.error_code === 429) {
+          console.log('Rate limit при установке webhook. Продолжаем с текущими настройками...');
+          const retryAfter = webhookError.response?.parameters?.retry_after || 10;
+          console.log(`Повторная попытка через ${retryAfter} секунд...`);
+          
+          // Ждем и пытаемся снова
+          await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
+          try {
+            await bot.telegram.setWebhook(`${WEBHOOK_URL}${WEBHOOK_PATH}`);
+            console.log('Webhook установлен после ожидания');
+          } catch (retryError) {
+            console.log('Не удалось установить webhook, но продолжаем запуск...');
+          }
+        } else {
+          console.error('Ошибка установки webhook:', webhookError);
+          throw webhookError;
+        }
+      }
       
       // Запуск в режиме webhook
       await bot.launch({
