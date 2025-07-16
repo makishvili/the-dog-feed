@@ -100,7 +100,27 @@ EOF
 
 # Получение SSL сертификата
 obtain_ssl_certificate() {
-    print_status "Получение SSL сертификата для $DOMAIN..."
+    print_status "Проверка SSL сертификата для $DOMAIN..."
+    
+    # Проверяем, существует ли уже сертификат
+    if [ -d "/etc/letsencrypt/live/$DOMAIN" ] && [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ] && [ -f "/etc/letsencrypt/live/$DOMAIN/privkey.pem" ]; then
+        print_success "SSL сертификат для $DOMAIN уже установлен"
+        
+        # Проверяем срок действия сертификата
+        CERT_EXPIRY=$(sudo openssl x509 -enddate -noout -in "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" | cut -d= -f2)
+        EXPIRY_DATE=$(date -d "$CERT_EXPIRY" +%s)
+        CURRENT_DATE=$(date +%s)
+        DAYS_LEFT=$(( (EXPIRY_DATE - CURRENT_DATE) / 86400 ))
+        
+        if [ $DAYS_LEFT -gt 30 ]; then
+            print_success "Сертификат действителен еще $DAYS_LEFT дней"
+            return 0
+        else
+            print_warning "Сертификат истекает через $DAYS_LEFT дней, обновляем..."
+        fi
+    else
+        print_status "Получение нового SSL сертификата для $DOMAIN..."
+    fi
     
     # Проверяем что домен указывает на этот сервер
     print_warning "Убедитесь что домен $DOMAIN указывает на IP этого сервера!"
@@ -158,12 +178,23 @@ setup_final_config() {
 
 # Настройка автообновления сертификатов
 setup_cert_renewal() {
-    print_status "Настройка автообновления SSL сертификатов..."
+    print_status "Проверка автообновления SSL сертификатов..."
     
-    # Проверяем автообновление
-    sudo certbot renew --dry-run
+    # Проверяем, что systemd timer для certbot активен
+    if systemctl is-active --quiet certbot.timer; then
+        print_success "Автообновление certbot уже активно"
+    else
+        print_status "Включаем автообновление certbot..."
+        sudo systemctl enable certbot.timer
+        sudo systemctl start certbot.timer
+        print_success "Автообновление certbot включено"
+    fi
     
-    print_success "Автообновление SSL сертификатов настроено"
+    # Показываем статус
+    print_status "Статус автообновления:"
+    sudo systemctl status certbot.timer --no-pager --lines=3
+    
+    print_success "Сертификаты будут автоматически обновляться каждые 12 часов"
 }
 
 # Открытие портов в firewall
