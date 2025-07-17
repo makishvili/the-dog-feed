@@ -16,12 +16,11 @@
     "yc:update": "git pull && npm install && npm run build && pm2 restart dog-feeding-bot",
     "yc:logs": "pm2 logs dog-feeding-bot",
     "yc:status": "pm2 status",
-    "deploy:yandex": "./scripts/deploy-yandex.sh",
-    "update:yandex": "./scripts/update-yandex.sh",
-    "logs:yandex": "./scripts/logs-yandex.sh",
-    "status:yandex": "./scripts/status-yandex.sh",
-    "create-vm:yandex": "./scripts/create-vm-yandex.sh",
-    "setup-folder:yandex": "./scripts/setup-yandex-folder.sh"
+    "deploy:yandex": "./scripts/deployment/deploy-yandex.sh",
+    "update:yandex": "./scripts/maintenance/update-yandex.sh",
+    "logs:yandex": "./scripts/maintenance/logs-yandex.sh",
+    "status:yandex": "./scripts/maintenance/status-yandex.sh",
+    "reset-vm:yandex": "./scripts/maintenance/reset-vm.sh"
   },
   "dependencies": {
     "@types/sqlite3": "^5.1.0",

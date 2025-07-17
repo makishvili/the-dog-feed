@@ -212,7 +212,7 @@ journalctl -u your-service-name -f
 Если нужен HTTPS, используйте автоматический скрипт настройки nginx с SSL:
 ```bash
 # Скопируйте файлы на VM
-scp scripts/setup-nginx-yandex.sh yc-user@YOUR_VM_IP:~/
+scp scripts/deployment/setup-nginx-yandex.sh yc-user@YOUR_VM_IP:~/
 scp nginx.yandex.conf yc-user@YOUR_VM_IP:~/
 
 # Запустите автоматическую настройку

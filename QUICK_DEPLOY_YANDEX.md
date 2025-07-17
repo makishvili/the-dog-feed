@@ -89,7 +89,7 @@ npm run yc:update
 2. **Автоматическая настройка nginx с SSL (рекомендуется):**
 ```bash
 # Скопируйте скрипт на VM
-scp scripts/setup-nginx-yandex.sh yc-user@YOUR_VM_IP:~/
+scp scripts/deployment/setup-nginx-yandex.sh yc-user@YOUR_VM_IP:~/
 scp nginx.yandex.conf yc-user@YOUR_VM_IP:~/
 
 # Запустите автоматическую настройку

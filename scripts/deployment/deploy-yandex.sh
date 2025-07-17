@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 🚀 Интерактивный скрипт развертывания в Yandex Cloud
-# Использование: ./scripts/deploy-yandex.sh
+# Использование: ./scripts/deployment/deploy-yandex.sh
 
 set -e
 
@@ -112,7 +112,7 @@ sudo apt-get install -y git build-essential python3
 sudo npm install -g pm2
 
 # Создание директорий
-mkdir -p ~/dog-feeding-bot
+mkdir -p ~/logs
 
 echo "Зависимости установлены успешно"
 EOF
@@ -142,9 +142,6 @@ npm install
 
 # Сборка проекта
 npm run build
-
-# Создание папки для логов
-mkdir -p logs
 
 echo "Проект развернут"
 EOF
@@ -207,11 +204,14 @@ pm2 status
 
 echo ""
 echo "=== Последние логи ==="
-pm2 logs dog-feeding-bot --lines 10
+pm2 logs dog-feeding-bot --lines 10 --nostream 2>/dev/null || echo "Логи временно недоступны"
 
 echo ""
 echo "=== Проверка порта ==="
 curl -s http://localhost:3000/webhook || echo "Webhook endpoint не отвечает"
+
+echo ""
+echo "=== Проверка завершена ==="
 EOF
 }
 
