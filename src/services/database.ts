@@ -2,6 +2,14 @@ import sqlite3 from 'sqlite3';
 import { promisify } from 'util';
 import path from 'path';
 
+// Вспомогательная функция для получения времени в московском часовом поясе
+function getMoscowTime(): Date {
+  const now = new Date();
+  // Московское время UTC+3
+  const moscowTime = new Date(now.getTime() + (3 * 60 * 60 * 1000));
+  return moscowTime;
+}
+
 export interface DatabaseUser {
   id: number;
   telegramId: number;
@@ -187,12 +195,14 @@ export class DatabaseService {
   // Методы для работы с пользователями
   async createUser(telegramId: number, username?: string): Promise<DatabaseUser> {
     return new Promise((resolve, reject) => {
+      const moscowTime = getMoscowTime();
+      
       const stmt = this.db.prepare(`
-        INSERT INTO users (telegram_id, username, notifications_enabled, feeding_interval)
-        VALUES (?, ?, 1, 210)
+        INSERT INTO users (telegram_id, username, notifications_enabled, feeding_interval, created_at)
+        VALUES (?, ?, 1, 210, ?)
       `);
       
-      stmt.run([telegramId, username], function(err) {
+      stmt.run([telegramId, username, moscowTime.toISOString()], function(err) {
         if (err) {
           reject(err);
         } else {
@@ -202,7 +212,7 @@ export class DatabaseService {
             username,
             notificationsEnabled: true,
             feedingInterval: 210,
-            createdAt: new Date()
+            createdAt: moscowTime
           });
         }
       });
@@ -313,19 +323,21 @@ export class DatabaseService {
   // Методы для работы с кормлениями
   async createFeeding(userId: number, foodType: string = 'dry', amount: number = 12): Promise<DatabaseFeeding> {
     return new Promise((resolve, reject) => {
+      const moscowTime = getMoscowTime();
+      
       const stmt = this.db.prepare(`
         INSERT INTO feedings (user_id, timestamp, food_type, amount)
-        VALUES (?, CURRENT_TIMESTAMP, ?, ?)
+        VALUES (?, ?, ?, ?)
       `);
       
-      stmt.run([userId, foodType, amount], function(err) {
+      stmt.run([userId, moscowTime.toISOString(), foodType, amount], function(err) {
         if (err) {
           reject(err);
         } else {
           resolve({
             id: this.lastID,
             userId,
-            timestamp: new Date(),
+            timestamp: moscowTime,
             foodType,
             amount
           });
@@ -452,10 +464,12 @@ export class DatabaseService {
   // Методы для работы с настройками
   async setSetting(key: string, value: string): Promise<void> {
     return new Promise((resolve, reject) => {
+      const moscowTime = getMoscowTime();
+      
       this.db.run(`
         INSERT OR REPLACE INTO settings (key, value, updated_at)
-        VALUES (?, ?, CURRENT_TIMESTAMP)
-      `, [key, value], (err) => {
+        VALUES (?, ?, ?)
+      `, [key, value, moscowTime.toISOString()], (err) => {
         if (err) {
           reject(err);
         } else {
@@ -649,12 +663,14 @@ export class DatabaseService {
   // Создание запланированного кормления
   async createScheduledFeeding(scheduledTime: Date, createdBy: number): Promise<DatabaseScheduledFeeding> {
     return new Promise((resolve, reject) => {
+      const moscowTime = getMoscowTime();
+      
       const stmt = this.db.prepare(`
-        INSERT INTO scheduled_feedings (scheduled_time, is_active, created_by)
-        VALUES (?, 1, ?)
+        INSERT INTO scheduled_feedings (scheduled_time, is_active, created_by, created_at)
+        VALUES (?, 1, ?, ?)
       `);
       
-      stmt.run([scheduledTime.toISOString(), createdBy], function(err) {
+      stmt.run([scheduledTime.toISOString(), createdBy, moscowTime.toISOString()], function(err) {
         if (err) {
           reject(err);
         } else {
@@ -663,7 +679,7 @@ export class DatabaseService {
             scheduledTime,
             isActive: true,
             createdBy,
-            createdAt: new Date()
+            createdAt: moscowTime
           });
         }
       });
@@ -799,11 +815,11 @@ export class DatabaseService {
   // Очистка старых неактивных запланированных кормлений (старше 30 дней)
   async cleanupOldScheduledFeedings(): Promise<number> {
     return new Promise((resolve, reject) => {
-      const thirtyDaysAgo = new Date();
-      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const moscowTime = getMoscowTime();
+      const thirtyDaysAgo = new Date(moscowTime.getTime() - (30 * 24 * 60 * 60 * 1000));
       
       this.db.run(`
-        DELETE FROM scheduled_feedings 
+        DELETE FROM scheduled_feedings
         WHERE is_active = 0 AND created_at < ?
       `, [thirtyDaysAgo.toISOString()], function(err) {
         if (err) {
