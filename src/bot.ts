@@ -27,12 +27,6 @@ import { TimeParser } from './services/parser';
 // Загрузка переменных окружения
 dotenv.config();
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
-if (!BOT_TOKEN) {
-  console.error('BOT_TOKEN не найден в переменных окружения');
-  process.exit(1);
-}
-
 // Переменные для webhook
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const WEBHOOK_URL = process.env.WEBHOOK_URL;
@@ -40,6 +34,24 @@ const PORT = parseInt(process.env.PORT || '3000');
 const WEBHOOK_PATH = process.env.WEBHOOK_PATH || '/webhook';
 
 console.log(`Запуск в режиме: ${NODE_ENV}`);
+
+// Выбор токена бота в зависимости от окружения
+let BOT_TOKEN: string;
+if (NODE_ENV === 'production') {
+  BOT_TOKEN = process.env.BOT_TOKEN_PROD || process.env.BOT_TOKEN || '';
+  if (!BOT_TOKEN) {
+    console.error('BOT_TOKEN_PROD или BOT_TOKEN не найден в переменных окружения для продакшена');
+    process.exit(1);
+  }
+  console.log('Используется продакшеновый бот');
+} else {
+  BOT_TOKEN = process.env.BOT_TOKEN_DEV || process.env.BOT_TOKEN || '';
+  if (!BOT_TOKEN) {
+    console.error('BOT_TOKEN_DEV или BOT_TOKEN не найден в переменных окружения для разработки');
+    process.exit(1);
+  }
+  console.log('Используется девелоперский бот');
+}
 
 // Создание бота
 const bot = new Telegraf<BotContext>(BOT_TOKEN);
@@ -334,8 +346,10 @@ async function startBot() {
       // Режим polling для разработки
       console.log('Запуск в режиме polling (разработка)...');
       
-      // Удаляем webhook если он был установлен
-      await bot.telegram.deleteWebhook();
+      // ВАЖНО: НЕ удаляем webhook в development, чтобы не повлиять на продакшеновый бот
+      // Если используется отдельный dev бот, то webhook у него скорее всего не установлен
+      // Если же используется тот же бот, то удаление webhook сломает продакшен
+      console.log('Webhook не удаляется для безопасности продакшенового бота');
       
       // Запуск в режиме polling
       await bot.launch();
