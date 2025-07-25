@@ -6,8 +6,7 @@ import { MainHandler } from './handlers/main';
 import { DatabaseService } from './services/database';
 import { mainScene, setGlobalServices, setGlobalDatabaseForMain } from './scenes/main';
 import { setGlobalServicesForInterval } from './scenes/interval-settings';
-import { todayHistoryScene, setGlobalDatabaseForTodayHistory } from './scenes/today-history';
-import { feedingSuccessScene } from './scenes/feeding-success';
+import { todayHistoryScene, setGlobalDatabaseForTodayHistory, setGlobalSchedulerForTodayHistory, setGlobalTimerForTodayHistory } from './scenes/today-history';
 import { settingsScene } from './scenes/settings';
 import { historyScene } from './scenes/history';
 import { intervalSettingsScene } from './scenes/interval-settings';
@@ -16,10 +15,10 @@ import { foodTypeSettingsScene, setGlobalDatabaseForFoodTypeSettings } from './s
 import { foodAmountSettingsScene, setGlobalDatabaseForFoodAmountSettings } from './scenes/food-amount-settings';
 import { feedingDetailsScene, setGlobalDatabaseForFeedingDetails } from './scenes/feeding-details';
 import { notificationSettingsScene, setGlobalDatabaseForNotificationSettings } from './scenes/notification-settings';
-import { fullHistoryScene } from './scenes/full-history';
 import { exportScene } from './scenes/export';
 import { scheduleFeedingScene, setGlobalSchedulerForScheduleFeeding, setGlobalDatabaseForScheduleFeeding } from './scenes/schedule-feeding';
 import { scheduledListScene, setGlobalSchedulerForScheduledList } from './scenes/scheduled-list';
+import { fullHistoryScene, setGlobalSchedulerForFullHistory, setGlobalTimerForFullHistory } from './scenes/full-history';
 import { SchedulerService } from './services/scheduler';
 import { SCENES } from './utils/constants';
 import { TimeParser } from './services/parser';
@@ -91,11 +90,15 @@ setGlobalDatabaseForNotificationSettings(database);
 setGlobalSchedulerForScheduleFeeding(schedulerService);
 setGlobalDatabaseForScheduleFeeding(database);
 setGlobalSchedulerForScheduledList(schedulerService);
+setGlobalSchedulerForTodayHistory(schedulerService);
+setGlobalSchedulerForFullHistory(schedulerService);
+setGlobalTimerForTodayHistory(timerService);
+setGlobalTimerForFullHistory(timerService);
+setGlobalTimerForTodayHistory(timerService);
 
 // Настройка сцен
 const stage = new Scenes.Stage<BotContext>([
   mainScene,
-  feedingSuccessScene,
   feedingDetailsScene,
   settingsScene,
   historyScene,

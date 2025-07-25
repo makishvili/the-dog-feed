@@ -2,21 +2,25 @@ import { Markup } from 'telegraf';
 import { EMOJIS } from './constants';
 
 // Главная клавиатура
-export function getMainKeyboard() {
-  return Markup.keyboard([
-    [`${EMOJIS.FEED} Я покормил`],
-    [`${EMOJIS.STOP} Завершить кормления на сегодня`],
-    [`${EMOJIS.SCHEDULE} Управление расписанием`],
-    [`${EMOJIS.SETTINGS} Настройки`, `${EMOJIS.HISTORY} История кормлений`]
-  ]).resize();
-}
-
-// Клавиатура после успешного кормления
-export function getFeedingSuccessKeyboard() {
-  return Markup.keyboard([
-    ['📝 Уточнить детали кормления'],
-    ['🏠 Выйти на главный экран']
-  ]).resize();
+export function getMainKeyboard(showFeedingDetailsButton = false) {
+  const keyboard = [];
+  
+  // Добавляем кнопку "Уточнить детали кормления" если нужно
+  if (showFeedingDetailsButton) {
+    keyboard.push(['📝 Уточнить детали кормления']);
+  }
+  
+  // Основные кнопки
+  // Если показываем кнопку уточнения деталей, то кнопка "Я покормил" не нужна
+  if (!showFeedingDetailsButton) {
+    keyboard.push([`${EMOJIS.FEED} Я покормил`]);
+  }
+  
+  keyboard.push([`${EMOJIS.STOP} Завершить кормления на сегодня`]);
+  keyboard.push([`${EMOJIS.SCHEDULE} Управление расписанием`]);
+  keyboard.push([`${EMOJIS.SETTINGS} Настройки`, `${EMOJIS.HISTORY} История кормлений`]);
+  
+  return Markup.keyboard(keyboard).resize();
 }
 
 // Клавиатура настроек (заглушка)

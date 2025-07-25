@@ -53,8 +53,14 @@ export class MainHandler {
 
       console.log(`Кормление записано: ${user.username} в ${feeding.timestamp}, ${foodInfo}`);
 
-      // Переход к сцене успешного кормления
-      await ctx.scene.enter(SCENES.FEEDING_SUCCESS);
+      // Устанавливаем флаг в сессии, что пользователь попал на главный экран после кормления
+      if (!ctx.session) {
+        ctx.session = {};
+      }
+      ctx.session.justFed = true;
+
+      // Переход на главный экран
+      await ctx.scene.enter(SCENES.MAIN);
 
     } catch (error) {
       console.error('Ошибка обработки кормления:', error);

@@ -44,7 +44,15 @@ async function getOrCreateUser(telegramId: number, username?: string): Promise<U
 
 // Вход в главную сцену
 mainScene.enter((ctx) => {
-  ctx.reply(MESSAGES.WELCOME, getMainKeyboard());
+  // Проверяем, нужно ли показывать кнопку "Уточнить детали кормления"
+  const showFeedingDetailsButton = ctx.session?.justFed === true;
+  
+  // Очищаем флаг, чтобы кнопка не показывалась при следующих входах
+  if (ctx.session) {
+    ctx.session.justFed = false;
+  }
+  
+  ctx.reply(MESSAGES.WELCOME, getMainKeyboard(showFeedingDetailsButton));
 });
 
 // Обработка кнопки "Я покормил"
@@ -137,8 +145,14 @@ mainScene.hears(/🍽️ Я покормил/, async (ctx) => {
 
     console.log(`Кормление записано в БД: ${dbUser.username} в ${dbFeeding.timestamp}`);
 
-    // Переход к сцене успешного кормления
-    await ctx.scene.enter(SCENES.FEEDING_SUCCESS);
+    // Устанавливаем флаг в сессии, что пользователь попал на главный экран после кормления
+    if (!ctx.session) {
+      ctx.session = {};
+    }
+    ctx.session.justFed = true;
+
+    // Переход на главный экран
+    await ctx.scene.enter(SCENES.MAIN);
   } catch (error) {
     console.error('Ошибка при обработке кормления:', error);
     ctx.reply('Произошла ошибка при записи кормления. Попробуйте еще раз.');
@@ -297,6 +311,11 @@ mainScene.on('text', (ctx) => {
     return;
   }
   ctx.reply(MESSAGES.UNKNOWN_COMMAND, getMainKeyboard());
+});
+
+// Обработка кнопки "Уточнить детали кормления"
+mainScene.hears(/📝 Уточнить детали кормления/, (ctx) => {
+  ctx.scene.enter(SCENES.FEEDING_DETAILS);
 });
 
 

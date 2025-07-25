@@ -59,7 +59,6 @@ export const EMOJIS = {
 // Названия сцен
 export const SCENES = {
   MAIN: 'main',
-  FEEDING_SUCCESS: 'feeding_success',
   FEEDING_DETAILS: 'feeding_details',
   SETTINGS: 'settings',
   HISTORY: 'history',
