@@ -4,6 +4,7 @@ import { SCENES } from '../utils/constants';
 import { DatabaseService, DatabaseFeeding, DatabaseUser } from '../services/database';
 import { ScheduledFeeding } from '../services/scheduler';
 import { TimerService } from '../services/timer';
+import { toMoscowTime } from '../utils/time-utils';
 
 export const todayHistoryScene = new Scenes.BaseScene<BotContext>(SCENES.TODAY_HISTORY);
 
@@ -54,7 +55,7 @@ todayHistoryScene.enter(async (ctx) => {
       // Группируем кормления по времени
       todayFeedings.forEach((feeding, index) => {
         const user = usersMap.get(feeding.userId);
-        const timeStr = feeding.timestamp.toLocaleString('ru-RU', {
+        const timeStr = toMoscowTime(feeding.timestamp).toLocaleString('ru-RU', {
           hour: '2-digit',
           minute: '2-digit'
         });
@@ -253,7 +254,7 @@ todayHistoryScene.command('status', async (ctx) => {
     if (lastFeeding) {
       const lastUser = await globalDatabase.getUserByTelegramId(ctx.from?.id || 0);
       message += `🍽️ Последнее кормление:\n`;
-      message += `   Время: ${lastFeeding.timestamp.toLocaleString('ru-RU')}\n`;
+      message += `   Время: ${toMoscowTime(lastFeeding.timestamp).toLocaleString('ru-RU')}\n`;
       message += `   Кто: ${lastUser?.username || 'Неизвестно'}\n\n`;
     } else {
       message += `🍽️ Кормлений еще не было\n\n`;

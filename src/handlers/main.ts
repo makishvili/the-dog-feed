@@ -4,6 +4,7 @@ import { DatabaseUser, DatabaseFeeding } from '../services/database';
 import { TimerService } from '../services/timer';
 import { DatabaseService } from '../services/database';
 import { MESSAGES, SCENES } from '../utils/constants';
+import { toMoscowTime } from '../utils/time-utils';
 
 export class MainHandler {
   private timerService: TimerService;
@@ -43,7 +44,7 @@ export class MainHandler {
 
       // Уведомление всех пользователей через NotificationService
       const message = `${MESSAGES.FEEDING_COMPLETED}\n` +
-        `Время: ${feeding.timestamp.toLocaleString('ru-RU')}\n` +
+        `Время: ${toMoscowTime(feeding.timestamp).toLocaleString('ru-RU')}\n` +
         `Кто: ${user.username || 'Пользователь'}\n` +
         `Корм: ${foodInfo}\n\n` +
         `⏰ Следующее кормление через ${Math.round(this.timerService.getCurrentInterval() / 60)} часов`;
@@ -51,7 +52,7 @@ export class MainHandler {
       const notificationService = this.timerService.getNotificationService();
       await notificationService.sendToAll(message);
 
-      console.log(`Кормление записано: ${user.username} в ${feeding.timestamp}, ${foodInfo}`);
+      console.log(`Кормление записано: ${user.username} в ${toMoscowTime(feeding.timestamp)}, ${foodInfo}`);
 
       // Устанавливаем флаг в сессии, что пользователь попал на главный экран после кормления
       if (!ctx.session) {

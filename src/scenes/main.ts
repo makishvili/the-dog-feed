@@ -3,6 +3,7 @@ import { BotContext, User, Feeding } from '../types';
 import { DatabaseService } from '../services/database';
 import { getMainKeyboard } from '../utils/keyboards';
 import { MESSAGES, SCENES } from '../utils/constants';
+import { toMoscowTime } from '../utils/time-utils';
 
 export const mainScene = new Scenes.BaseScene<BotContext>(SCENES.MAIN);
 
@@ -126,7 +127,7 @@ mainScene.hears(/🍽️ Я покормил/, async (ctx) => {
 
     // Уведомление всех пользователей
     const message = `${MESSAGES.FEEDING_COMPLETED}\n` +
-      `Время: ${dbFeeding.timestamp.toLocaleString('ru-RU')}\n` +
+      `Время: ${toMoscowTime(dbFeeding.timestamp).toLocaleString('ru-RU')}\n` +
       `Кто: ${dbUser.username || 'Пользователь'}\n` +
       `Корм: ${foodInfo}\n\n` +
       `⏰ Следующее кормление через ${intervalText}`;
@@ -143,7 +144,7 @@ mainScene.hears(/🍽️ Я покормил/, async (ctx) => {
       }
     }
 
-    console.log(`Кормление записано в БД: ${dbUser.username} в ${dbFeeding.timestamp}`);
+    console.log(`Кормление записано в БД: ${dbUser.username} в ${toMoscowTime(dbFeeding.timestamp)}`);
 
     // Устанавливаем флаг в сессии, что пользователь попал на главный экран после кормления
     if (!ctx.session) {
@@ -256,7 +257,7 @@ mainScene.command('status', async (ctx) => {
     if (lastFeeding) {
       const lastUser = await globalDatabase.getUserById(lastFeeding.userId);
       message += `🍽️ Последнее кормление:\n`;
-      message += `   Время: ${lastFeeding.timestamp.toLocaleString('ru-RU')}\n`;
+      message += `   Время: ${toMoscowTime(lastFeeding.timestamp).toLocaleString('ru-RU')}\n`;
       message += `   Кто: ${lastUser?.username || 'Неизвестно'}\n\n`;
     } else {
       message += `🍽️ Кормлений еще не было\n\n`;

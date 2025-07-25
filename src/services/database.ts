@@ -2,13 +2,6 @@ import sqlite3 from 'sqlite3';
 import { promisify } from 'util';
 import path from 'path';
 
-// Вспомогательная функция для получения времени в московском часовом поясе
-function getMoscowTime(): Date {
-  const now = new Date();
-  // Московское время UTC+3
-  const moscowTime = new Date(now.getTime() + (3 * 60 * 60 * 1000));
-  return moscowTime;
-}
 
 export interface DatabaseUser {
   id: number;
@@ -195,14 +188,14 @@ export class DatabaseService {
   // Методы для работы с пользователями
   async createUser(telegramId: number, username?: string): Promise<DatabaseUser> {
     return new Promise((resolve, reject) => {
-      const moscowTime = getMoscowTime();
+      const now = new Date();
       
       const stmt = this.db.prepare(`
         INSERT INTO users (telegram_id, username, notifications_enabled, feeding_interval, created_at)
         VALUES (?, ?, 1, 210, ?)
       `);
       
-      stmt.run([telegramId, username, moscowTime.toISOString()], function(err) {
+      stmt.run([telegramId, username, now.toISOString()], function(err) {
         if (err) {
           reject(err);
         } else {
@@ -212,7 +205,7 @@ export class DatabaseService {
             username,
             notificationsEnabled: true,
             feedingInterval: 210,
-            createdAt: moscowTime
+            createdAt: now
           });
         }
       });
@@ -323,21 +316,21 @@ export class DatabaseService {
   // Методы для работы с кормлениями
   async createFeeding(userId: number, foodType: string = 'dry', amount: number = 12): Promise<DatabaseFeeding> {
     return new Promise((resolve, reject) => {
-      const moscowTime = getMoscowTime();
+      const now = new Date();
       
       const stmt = this.db.prepare(`
         INSERT INTO feedings (user_id, timestamp, food_type, amount)
         VALUES (?, ?, ?, ?)
       `);
       
-      stmt.run([userId, moscowTime.toISOString(), foodType, amount], function(err) {
+      stmt.run([userId, now.toISOString(), foodType, amount], function(err) {
         if (err) {
           reject(err);
         } else {
           resolve({
             id: this.lastID,
             userId,
-            timestamp: moscowTime,
+            timestamp: now,
             foodType,
             amount
           });
@@ -350,12 +343,23 @@ export class DatabaseService {
 
   async getTodayFeedings(): Promise<DatabaseFeeding[]> {
     return new Promise((resolve, reject) => {
+      // Получаем начало и конец сегодняшнего дня в московском времени
+      const now = new Date();
+      const moscowNow = new Date(now.getTime() + (3 * 60 * 60 * 1000));
+      const startOfDay = new Date(moscowNow.getFullYear(), moscowNow.getMonth(), moscowNow.getDate());
+      const endOfDay = new Date(startOfDay);
+      endOfDay.setDate(endOfDay.getDate() + 1);
+      
+      // Конвертируем обратно в UTC для запроса к базе данных
+      const startOfDayUTC = new Date(startOfDay.getTime() - (3 * 60 * 60 * 1000));
+      const endOfDayUTC = new Date(endOfDay.getTime() - (3 * 60 * 60 * 1000));
+      
       this.db.all(`
         SELECT id, user_id, timestamp, food_type, amount, details
-        FROM feedings 
-        WHERE DATE(timestamp) = DATE('now')
+        FROM feedings
+        WHERE timestamp >= ? AND timestamp < ?
         ORDER BY timestamp DESC
-      `, (err, rows: any[]) => {
+      `, [startOfDayUTC.toISOString(), endOfDayUTC.toISOString()], (err, rows: any[]) => {
         if (err) {
           reject(err);
         } else {
@@ -464,12 +468,12 @@ export class DatabaseService {
   // Методы для работы с настройками
   async setSetting(key: string, value: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      const moscowTime = getMoscowTime();
+      const now = new Date();
       
       this.db.run(`
         INSERT OR REPLACE INTO settings (key, value, updated_at)
         VALUES (?, ?, ?)
-      `, [key, value, moscowTime.toISOString()], (err) => {
+      `, [key, value, now.toISOString()], (err) => {
         if (err) {
           reject(err);
         } else {
@@ -531,7 +535,19 @@ export class DatabaseService {
           }
         });
 
-        this.db.get('SELECT COUNT(*) as count FROM feedings WHERE DATE(timestamp) = DATE("now")', (err, row: any) => {
+        // Получаем начало и конец сегодняшнего дня в московском времени
+        const now = new Date();
+        const moscowNow = new Date(now.getTime() + (3 * 60 * 60 * 1000));
+        const startOfDay = new Date(moscowNow.getFullYear(), moscowNow.getMonth(), moscowNow.getDate());
+        const endOfDay = new Date(startOfDay);
+        endOfDay.setDate(endOfDay.getDate() + 1);
+        
+        // Конвертируем обратно в UTC для запроса к базе данных
+        const startOfDayUTC = new Date(startOfDay.getTime() - (3 * 60 * 60 * 1000));
+        const endOfDayUTC = new Date(endOfDay.getTime() - (3 * 60 * 60 * 1000));
+        
+        this.db.get('SELECT COUNT(*) as count FROM feedings WHERE timestamp >= ? AND timestamp < ?',
+          [startOfDayUTC.toISOString(), endOfDayUTC.toISOString()], (err, row: any) => {
           if (err) reject(err);
           else {
             todayFeedings = row.count;
@@ -663,14 +679,14 @@ export class DatabaseService {
   // Создание запланированного кормления
   async createScheduledFeeding(scheduledTime: Date, createdBy: number): Promise<DatabaseScheduledFeeding> {
     return new Promise((resolve, reject) => {
-      const moscowTime = getMoscowTime();
+      const now = new Date();
       
       const stmt = this.db.prepare(`
         INSERT INTO scheduled_feedings (scheduled_time, is_active, created_by, created_at)
         VALUES (?, 1, ?, ?)
       `);
       
-      stmt.run([scheduledTime.toISOString(), createdBy, moscowTime.toISOString()], function(err) {
+      stmt.run([scheduledTime.toISOString(), createdBy, now.toISOString()], function(err) {
         if (err) {
           reject(err);
         } else {
@@ -679,7 +695,7 @@ export class DatabaseService {
             scheduledTime,
             isActive: true,
             createdBy,
-            createdAt: moscowTime
+            createdAt: now
           });
         }
       });
@@ -815,8 +831,8 @@ export class DatabaseService {
   // Очистка старых неактивных запланированных кормлений (старше 30 дней)
   async cleanupOldScheduledFeedings(): Promise<number> {
     return new Promise((resolve, reject) => {
-      const moscowTime = getMoscowTime();
-      const thirtyDaysAgo = new Date(moscowTime.getTime() - (30 * 24 * 60 * 60 * 1000));
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now.getTime() - (30 * 24 * 60 * 60 * 1000));
       
       this.db.run(`
         DELETE FROM scheduled_feedings

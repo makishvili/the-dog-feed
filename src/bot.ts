@@ -22,6 +22,7 @@ import { fullHistoryScene, setGlobalSchedulerForFullHistory, setGlobalTimerForFu
 import { SchedulerService } from './services/scheduler';
 import { SCENES } from './utils/constants';
 import { TimeParser } from './services/parser';
+import { toMoscowTime } from './utils/time-utils';
 
 // Загрузка переменных окружения
 dotenv.config();
@@ -216,7 +217,7 @@ bot.command('status', async (ctx) => {
     if (lastFeeding) {
       const lastUser = await database.getUserByTelegramId(ctx.from?.id || 0);
       message += `🍽️ Последнее кормление:\n`;
-      message += `   Время: ${lastFeeding.timestamp.toLocaleString('ru-RU')}\n`;
+      message += `   Время: ${toMoscowTime(lastFeeding.timestamp).toLocaleString('ru-RU')}\n`;
       message += `   Кто: ${lastUser?.username || 'Неизвестно'}\n\n`;
     } else {
       message += `🍽️ Кормлений еще не было\n\n`;
