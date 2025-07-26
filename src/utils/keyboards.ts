@@ -16,8 +16,8 @@ export function getMainKeyboard(showFeedingDetailsButton = false) {
     keyboard.push([`${EMOJIS.FEED} Я покормил`]);
   }
   
-  keyboard.push([`${EMOJIS.SCHEDULE} Внеплановые кормления`, `${EMOJIS.STOP} Сегодня больше не даем`]);
-  keyboard.push([`${EMOJIS.HISTORY} История`, `${EMOJIS.SETTINGS} Настройки`]);
+  keyboard.push([`${EMOJIS.SCHEDULE} Управление расписанием`, `${EMOJIS.STOP} Завершить кормления на сегодня`]);
+  keyboard.push([`${EMOJIS.HISTORY} История кормлений`, `${EMOJIS.SETTINGS} Настройки`]);
   
   return Markup.keyboard(keyboard).resize();
 }
@@ -25,32 +25,32 @@ export function getMainKeyboard(showFeedingDetailsButton = false) {
 // Клавиатура настроек
 export function getSettingsKeyboard() {
   return Markup.keyboard([
-    ['🍽️ Корм', '⏰ Время между кормлениями', '🔔 Вкл/выкл уведомления'],
-    ['🏠 Назад']
+    ['🍽️ Настройки корма', '⏰ Настройки интервала кормления', '🔔 Настройки уведомлений'],
+    ['🏠 Выйти на главный экран']
   ]).resize();
 }
 
 // Клавиатура истории
 export function getHistoryKeyboard() {
   return Markup.keyboard([
-    ['📅 Сегодня', '📋 Все время'],
-    ['🏠 Назад']
+    ['📅 Сегодня', '📋 Все кормления'],
+    ['🏠 Выйти на главный экран']
   ]).resize();
 }
 
-// Универсальная кнопка "Назад"
+// Универсальная кнопка "Выйти на главный экран"
 export function getBackKeyboard() {
   return Markup.keyboard([
-    ['🏠 На главный экран']
+    ['🏠 Выйти на главный экран']
   ]).resize();
 }
 
 // Клавиатура для управления расписанием
 export function getScheduleManagementKeyboard() {
   return Markup.keyboard([
-    ['📅 Запланировать кормление на время'],
-    ['📋 Все запланированные', '❌ Отменить все запланированные'],
-    ['🏠 На главный экран']
+    ['📅 Создать кормление на время'],
+    ['📋 Просмотреть запланированные', '❌ Отменить все запланированные'],
+    ['🏠 Выйти на главный экран']
   ]).resize();
 }
 
@@ -58,7 +58,7 @@ export function getScheduleManagementKeyboard() {
 export function getScheduleFeedingKeyboard() {
   return Markup.keyboard([
     ['❌ Отменить ввод'],
-    ['🏠 На главный экран']
+    ['🏠 Выйти на главный экран']
   ]).resize();
 }
 
@@ -67,7 +67,7 @@ export function getScheduledListKeyboard() {
   return Markup.keyboard([
     ['📅 Создать новое кормление'],
     ['❌ Отменить все'],
-    ['🏠 На главный экран']
+    ['🏠 Выйти на главный экран']
   ]).resize();
 }
 
@@ -75,8 +75,8 @@ export function getScheduledListKeyboard() {
 export function getScheduledItemKeyboard(scheduleId: number) {
   return Markup.keyboard([
     [`❌ Отменить кормление ${scheduleId}`],
-    ['📋 Назад к списку'],
-    ['🏠 На главный экран']
+    ['📋 Выйти на главный экран к списку'],
+    ['🏠 Выйти на главный экран']
   ]).resize();
 }
 
@@ -84,17 +84,17 @@ export function getScheduledItemKeyboard(scheduleId: number) {
 export function getFullHistoryKeyboard() {
   return Markup.keyboard([
     ['📤 Экспорт истории', '🔍 Фильтры'],
-    ['◀️ Назад', '▶️ Далее'],
-    ['🏠 На главный экран']
+    ['◀️ Выйти на главный экран', '▶️ Далее'],
+    ['🏠 Выйти на главный экран']
   ]).resize();
 }
 
 // Клавиатура для экспорта
 export function getExportKeyboard() {
   return Markup.keyboard([
-    ['📋 CSV', '🌐 HTML'],
-    ['📅 неделя', '🗓️ месяц', '📊 все время'],
-    ['🏠 На главный экран']
+    ['📋 CSV формат', '🌐 HTML формат'],
+    ['📅 За неделю', '🗓️ За месяц', '📊 Все время'],
+    ['🏠 Выйти на главный экран']
   ]).resize();
 }
 
@@ -118,7 +118,7 @@ export function getPaginationKeyboard(currentPage: number, totalPages: number, h
   
   // Дополнительные действия
   buttons.push(['📤 Экспорт истории']);
-  buttons.push(['🏠 На главный экран']);
+  buttons.push(['🏠 Выйти на главный экран']);
   
   return Markup.keyboard(buttons).resize();
 }
