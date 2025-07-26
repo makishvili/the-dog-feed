@@ -5,6 +5,7 @@ import { MESSAGES, SCENES } from '../utils/constants';
 import { SchedulerService } from '../services/scheduler';
 import { DatabaseService } from '../services/database';
 import { User } from '../types';
+import { toMoscowTime, formatDateTime } from '../utils/time-utils';
 
 let globalSchedulerService: SchedulerService | null = null;
 let globalDatabase: DatabaseService | null = null;
@@ -167,7 +168,7 @@ scheduleFeedingScene.on('text', async (ctx) => {
     // Отправляем подтверждение
     ctx.reply(
       `${MESSAGES.SCHEDULE_FEEDING_SUCCESS}\n\n` +
-      `📅 Время: ${scheduledTime.toLocaleString('ru-RU')}\n` +
+      `📅 Время: ${formatDateTime(toMoscowTime(scheduledTime))}\n` +
       `👤 Создал: ${username}\n` +
       `🆔 ID: ${schedule.id}\n\n` +
       `Уведомление будет отправлено в назначенное время.`,

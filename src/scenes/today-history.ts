@@ -4,7 +4,7 @@ import { SCENES } from '../utils/constants';
 import { DatabaseService, DatabaseFeeding, DatabaseUser } from '../services/database';
 import { ScheduledFeeding } from '../services/scheduler';
 import { TimerService } from '../services/timer';
-import { toMoscowTime } from '../utils/time-utils';
+import { toMoscowTime, formatDateTime } from '../utils/time-utils';
 
 export const todayHistoryScene = new Scenes.BaseScene<BotContext>(SCENES.TODAY_HISTORY);
 
@@ -46,6 +46,92 @@ todayHistoryScene.enter(async (ctx) => {
 
     let message = '📅 История кормлений за сегодня\n\n';
 
+    // Получаем запланированные кормления
+    if (globalSchedulerService) {
+      try {
+        const scheduledFeedings: ScheduledFeeding[] = await globalSchedulerService.getActiveScheduledFeedings();
+        const now = new Date();
+        
+        // Фильтруем только будущие кормления
+        const futureFeedings: ScheduledFeeding[] = scheduledFeedings.filter((schedule: ScheduledFeeding) =>
+          schedule.scheduledTime > now
+        );
+        
+        if (futureFeedings.length > 0) {
+          message += `📅 Следующие запланированные кормления:\n`;
+          
+          // Сортируем по времени
+          futureFeedings.sort((a: ScheduledFeeding, b: ScheduledFeeding) =>
+            a.scheduledTime.getTime() - b.scheduledTime.getTime()
+          );
+          
+          // Показываем максимум 3 ближайших кормления
+          const displayFeedings = futureFeedings.slice(0, 3);
+          
+          for (const schedule of displayFeedings) {
+            const user = usersMap.get(schedule.createdBy);
+            const username = user?.username || 'Неизвестно';
+            
+            const scheduledTime = formatDateTime(schedule.scheduledTime);
+            
+            // Рассчитываем время до кормления
+            const timeUntil = schedule.scheduledTime.getTime() - now.getTime();
+            const hours = Math.floor(timeUntil / (1000 * 60 * 60));
+            const minutes = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
+            
+            let timeUntilText = '';
+            if (hours > 0) {
+              timeUntilText = `через ${hours} ч ${minutes} мин`;
+            } else {
+              timeUntilText = `через ${minutes} мин`;
+            }
+            
+            message += `⏰ ${scheduledTime} (${timeUntilText}) - ${username}\n`;
+          }
+          
+          if (futureFeedings.length > 3) {
+            message += `... и еще ${futureFeedings.length - 3} кормлений\n`;
+          }
+          
+          message += '\n';
+        }
+      } catch (error) {
+        console.error('Ошибка при получении запланированных кормлений:', error);
+      }
+    }
+    
+    // Получаем информацию о следующем автоматическом кормлении
+    if (globalTimerService) {
+      try {
+        const nextFeedingInfo = globalTimerService.getNextFeedingInfo();
+        if (nextFeedingInfo.isActive && nextFeedingInfo.time) {
+          const now = new Date();
+          const timeUntil = nextFeedingInfo.time.getTime() - now.getTime();
+          
+          if (timeUntil > 0) {
+            const hours = Math.floor(timeUntil / (1000 * 60 * 60));
+            const minutes = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
+            
+            let timeUntilText = '';
+            if (hours > 0) {
+              timeUntilText = `через ${hours} ч ${minutes} мин`;
+            } else {
+              timeUntilText = `через ${minutes} мин`;
+            }
+            
+            message += `⏰ Следующее автоматическое кормление:\n`;
+            const formattedTime = formatDateTime(nextFeedingInfo.time);
+            
+            message += `   ${formattedTime} (${timeUntilText})\n`;
+            
+            message += '\n';
+          }
+        }
+      } catch (error) {
+        console.error('Ошибка при получении информации о следующем автоматическом кормлении:', error);
+      }
+    }
+
     if (todayFeedings.length === 0) {
       message += '🍽️ Сегодня кормлений еще не было\n\n';
       message += 'Нажмите "🍽️ Я покормил" на главном экране, чтобы записать кормление.';
@@ -55,14 +141,12 @@ todayHistoryScene.enter(async (ctx) => {
       // Группируем кормления по времени
       todayFeedings.forEach((feeding, index) => {
         const user = usersMap.get(feeding.userId);
-        const timeStr = toMoscowTime(feeding.timestamp).toLocaleString('ru-RU', {
-          hour: '2-digit',
-          minute: '2-digit'
-        });
+        const timeStr = formatDateTime(toMoscowTime(feeding.timestamp));
         
+        // Форматируем запись в соответствии с запросом пользователя
+        const foodTypeText = feeding.foodType === 'dry' ? 'сухого' : 'мокрого';
         message += `${index + 1}. 🕐 ${timeStr}\n`;
-        message += `   👤 ${user?.username || 'Неизвестный пользователь'}\n`;
-        message += `   🍽️ ${feeding.foodType} корм, ${feeding.amount}г\n`;
+        message += `   ${user?.username || 'Неизвестный пользователь'} дал ${feeding.amount} грамм ${foodTypeText}\n`;
         
         // Добавляем детали кормления, если они есть
         if (feeding.details) {
@@ -102,96 +186,6 @@ todayHistoryScene.enter(async (ctx) => {
         if (intervals.length > 0) {
           message += `\n⏱️ Интервалы: ${intervals.join(', ')}`;
         }
-      }
-    }
-
-    // Получаем запланированные кормления
-    if (globalSchedulerService) {
-      try {
-        const scheduledFeedings: ScheduledFeeding[] = await globalSchedulerService.getActiveScheduledFeedings();
-        const now = new Date();
-        
-        // Фильтруем только будущие кормления
-        const futureFeedings: ScheduledFeeding[] = scheduledFeedings.filter((schedule: ScheduledFeeding) =>
-          schedule.scheduledTime > now
-        );
-        
-        if (futureFeedings.length > 0) {
-          message += `\n\n📅 Следующие запланированные кормления:\n`;
-          
-          // Сортируем по времени
-          futureFeedings.sort((a: ScheduledFeeding, b: ScheduledFeeding) =>
-            a.scheduledTime.getTime() - b.scheduledTime.getTime()
-          );
-          
-          // Показываем максимум 3 ближайших кормления
-          const displayFeedings = futureFeedings.slice(0, 3);
-          
-          for (const schedule of displayFeedings) {
-            const user = usersMap.get(schedule.createdBy);
-            const username = user?.username || 'Неизвестно';
-            
-            const scheduledTime = schedule.scheduledTime.toLocaleString('ru-RU', {
-              day: '2-digit',
-              month: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit'
-            });
-            
-            // Рассчитываем время до кормления
-            const timeUntil = schedule.scheduledTime.getTime() - now.getTime();
-            const hours = Math.floor(timeUntil / (1000 * 60 * 60));
-            const minutes = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
-            
-            let timeUntilText = '';
-            if (hours > 0) {
-              timeUntilText = `через ${hours} ч ${minutes} мин`;
-            } else {
-              timeUntilText = `через ${minutes} мин`;
-            }
-            
-            message += `⏰ ${scheduledTime} (${timeUntilText}) - ${username}\n`;
-          }
-          
-          if (futureFeedings.length > 3) {
-            message += `... и еще ${futureFeedings.length - 3} кормлений\n`;
-          }
-        }
-      } catch (error) {
-        console.error('Ошибка при получении запланированных кормлений:', error);
-      }
-    }
-    
-    // Получаем информацию о следующем автоматическом кормлении
-    if (globalTimerService) {
-      try {
-        const nextFeedingInfo = globalTimerService.getNextFeedingInfo();
-        if (nextFeedingInfo.isActive && nextFeedingInfo.time) {
-          const now = new Date();
-          const timeUntil = nextFeedingInfo.time.getTime() - now.getTime();
-          
-          if (timeUntil > 0) {
-            const hours = Math.floor(timeUntil / (1000 * 60 * 60));
-            const minutes = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
-            
-            let timeUntilText = '';
-            if (hours > 0) {
-              timeUntilText = `через ${hours} ч ${minutes} мин`;
-            } else {
-              timeUntilText = `через ${minutes} мин`;
-            }
-            
-            message += `\n\n⏰ Следующее автоматическое кормление:\n`;
-            message += `   ${nextFeedingInfo.time.toLocaleString('ru-RU', {
-              day: '2-digit',
-              month: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit'
-            })} (${timeUntilText})`;
-          }
-        }
-      } catch (error) {
-        console.error('Ошибка при получении информации о следующем автоматическом кормлении:', error);
       }
     }
     
@@ -254,7 +248,9 @@ todayHistoryScene.command('status', async (ctx) => {
     if (lastFeeding) {
       const lastUser = await globalDatabase.getUserByTelegramId(ctx.from?.id || 0);
       message += `🍽️ Последнее кормление:\n`;
-      message += `   Время: ${toMoscowTime(lastFeeding.timestamp).toLocaleString('ru-RU')}\n`;
+      const formattedTime = formatDateTime(toMoscowTime(lastFeeding.timestamp));
+      
+      message += `   Время: ${formattedTime}\n`;
       message += `   Кто: ${lastUser?.username || 'Неизвестно'}\n\n`;
     } else {
       message += `🍽️ Кормлений еще не было\n\n`;

@@ -3,7 +3,7 @@ import { BotContext, User, Feeding } from '../types';
 import { DatabaseService } from '../services/database';
 import { getMainKeyboard } from '../utils/keyboards';
 import { MESSAGES, SCENES } from '../utils/constants';
-import { toMoscowTime } from '../utils/time-utils';
+import { toMoscowTime, formatDateTime } from '../utils/time-utils';
 
 export const mainScene = new Scenes.BaseScene<BotContext>(SCENES.MAIN);
 
@@ -53,7 +53,17 @@ mainScene.enter((ctx) => {
     ctx.session.justFed = false;
   }
   
-  ctx.reply(MESSAGES.WELCOME, getMainKeyboard(showFeedingDetailsButton));
+  // Проверяем, был ли это первый вход (через /start)
+  if (!ctx.session?.firstVisitDone) {
+    // Первый вход - показываем приветственное сообщение
+    if (ctx.session) {
+      ctx.session.firstVisitDone = true;
+    }
+    ctx.reply(MESSAGES.WELCOME, getMainKeyboard(showFeedingDetailsButton));
+  } else {
+    // Последующие переходы - показываем другое сообщение
+    ctx.reply('Возвращаемся на главный экран', getMainKeyboard(showFeedingDetailsButton));
+  }
 });
 
 // Обработка кнопки "Я покормил"
@@ -126,15 +136,19 @@ mainScene.hears(/🍽️ Я покормил/, async (ctx) => {
     const foodInfo = `${foodAmount}г ${foodType === 'dry' ? 'сухого' : 'влажного'} корма`;
 
     // Уведомление всех пользователей
-    const message = `${MESSAGES.FEEDING_COMPLETED}\n` +
-      `Время: ${toMoscowTime(dbFeeding.timestamp).toLocaleString('ru-RU')}\n` +
-      `Кто: ${dbUser.username || 'Пользователь'}\n` +
-      `Корм: ${foodInfo}\n\n` +
-      `⏰ Следующее кормление через ${intervalText}`;
+    const message = `🍽️ Собаку покормили!\n` +
+      `${formatDateTime(toMoscowTime(dbFeeding.timestamp)).replace(', ', ' в ')}\n` +
+      `${dbUser.username || 'Пользователь'} дал ${foodInfo}\n\n` +
+      `⏰ Следующее кормление в ${nextFeedingInfo.time ? nextFeedingInfo.time.getHours().toString().padStart(2, '0') + ':' + nextFeedingInfo.time.getMinutes().toString().padStart(2, '0') : 'неизвестно'} (через ${intervalText})`;
 
     // Получаем всех пользователей из базы данных для уведомлений
     const allUsers = await globalDatabase.getAllUsers();
     for (const u of allUsers) {
+      // Пропускаем текущего пользователя, так как ему будет отправлено отдельное сообщение
+      if (u.telegramId === ctx.from!.id) {
+        continue;
+      }
+      
       if (u.notificationsEnabled) {
         try {
           await ctx.telegram.sendMessage(u.telegramId, message);
@@ -146,14 +160,8 @@ mainScene.hears(/🍽️ Я покормил/, async (ctx) => {
 
     console.log(`Кормление записано в БД: ${dbUser.username} в ${toMoscowTime(dbFeeding.timestamp)}`);
 
-    // Устанавливаем флаг в сессии, что пользователь попал на главный экран после кормления
-    if (!ctx.session) {
-      ctx.session = {};
-    }
-    ctx.session.justFed = true;
-
-    // Переход на главный экран
-    await ctx.scene.enter(SCENES.MAIN);
+    // Показываем сообщение об успешном кормлении и обновляем клавиатуру
+    await ctx.reply('✅ Кормление записано успешно!', getMainKeyboard(true));
   } catch (error) {
     console.error('Ошибка при обработке кормления:', error);
     ctx.reply('Произошла ошибка при записи кормления. Попробуйте еще раз.');
@@ -257,7 +265,7 @@ mainScene.command('status', async (ctx) => {
     if (lastFeeding) {
       const lastUser = await globalDatabase.getUserById(lastFeeding.userId);
       message += `🍽️ Последнее кормление:\n`;
-      message += `   Время: ${toMoscowTime(lastFeeding.timestamp).toLocaleString('ru-RU')}\n`;
+      message += `   Время: ${formatDateTime(toMoscowTime(lastFeeding.timestamp))}\n`;
       message += `   Кто: ${lastUser?.username || 'Неизвестно'}\n\n`;
     } else {
       message += `🍽️ Кормлений еще не было\n\n`;
@@ -281,7 +289,7 @@ mainScene.command('status', async (ctx) => {
     message += `⏰ Интервал кормления: ${intervalText}\n\n`;
     
     if (nextFeeding.isActive && nextFeeding.time) {
-      message += `⏰ Следующее кормление: ${nextFeeding.time.toLocaleString('ru-RU')}\n\n`;
+      message += `⏰ Следующее кормление: ${formatDateTime(toMoscowTime(nextFeeding.time))}\n\n`;
     } else {
       message += '⏹️ Кормления приостановлены\n\n';
     }
@@ -301,7 +309,7 @@ mainScene.command('status', async (ctx) => {
 
 // Обработка команды /home
 mainScene.command('home', (ctx) => {
-  ctx.reply(MESSAGES.WELCOME, getMainKeyboard());
+  ctx.reply('Возвращаемся на главный экран', getMainKeyboard());
 });
 
 // Обработка неизвестных команд (но не команд, начинающихся с /)
@@ -317,6 +325,11 @@ mainScene.on('text', (ctx) => {
 // Обработка кнопки "Уточнить детали кормления"
 mainScene.hears(/📝 Уточнить детали кормления/, (ctx) => {
   ctx.scene.enter(SCENES.FEEDING_DETAILS);
+});
+
+// Обработка кнопки "Выйти на главный экран"
+mainScene.hears(/🏠 Выйти на главный экран/, (ctx) => {
+  ctx.scene.enter(SCENES.MAIN);
 });
 
 

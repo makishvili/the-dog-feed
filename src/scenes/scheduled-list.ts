@@ -3,6 +3,7 @@ import { BotContext } from '../types';
 import { getScheduledListKeyboard } from '../utils/keyboards';
 import { MESSAGES, SCENES } from '../utils/constants';
 import { SchedulerService } from '../services/scheduler';
+import { toMoscowTime, formatDateTime } from '../utils/time-utils';
 
 let globalSchedulerService: SchedulerService | null = null;
 
@@ -49,8 +50,8 @@ async function showScheduledList(ctx: BotContext) {
       const user = await ctx.database.getUserById(schedule.createdBy);
       const username = user?.username || 'Неизвестно';
       
-      const scheduledTime = schedule.scheduledTime.toLocaleString('ru-RU');
-      const createdTime = schedule.createdAt.toLocaleString('ru-RU');
+      const scheduledTime = formatDateTime(toMoscowTime(schedule.scheduledTime));
+      const createdTime = formatDateTime(toMoscowTime(schedule.createdAt));
       
       // Рассчитываем время до кормления
       const now = new Date();
@@ -150,15 +151,15 @@ scheduledListScene.hears(/❌ Отменить кормление (\d+)/, async 
     ctx.reply(
       `✅ Кормление отменено!\n\n` +
       `🆔 ID: ${scheduleId}\n` +
-      `📅 Было запланировано на: ${schedule.scheduledTime.toLocaleString('ru-RU')}\n` +
+      `📅 Было запланировано на: ${formatDateTime(toMoscowTime(schedule.scheduledTime))}\n` +
       `👤 Отменил: ${username}`
     );
     
     // Уведомляем всех пользователей об отмене
     const notificationService = globalSchedulerService['timerService'].getNotificationService();
-    const notificationMessage = 
+    const notificationMessage =
       `❌ Отменено запланированное кормление\n\n` +
-      `⏰ Время: ${schedule.scheduledTime.toLocaleString('ru-RU')}\n` +
+      `⏰ Время: ${formatDateTime(toMoscowTime(schedule.scheduledTime))}\n` +
       `👤 Отменил: ${username}`;
     
     await notificationService.sendToAll(notificationMessage, { excludeUser: ctx.from?.id || 0 });

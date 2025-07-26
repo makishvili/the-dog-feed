@@ -4,6 +4,7 @@ import { getPaginationKeyboard } from '../utils/keyboards';
 import { MESSAGES, SCENES, EXPORT_SETTINGS } from '../utils/constants';
 import { ScheduledFeeding } from '../services/scheduler';
 import { TimerService } from '../services/timer';
+import { formatDateTime } from '../utils/time-utils';
 
 // Глобальные переменные для доступа к сервисам
 let globalSchedulerService: any = null;
@@ -65,36 +66,6 @@ async function showHistoryPage(ctx: BotContext, page: number) {
     // Формируем сообщение с историей
     let message = `${MESSAGES.FULL_HISTORY_HEADER}\n\n`;
     
-    // Добавляем статистику
-    message += `${MESSAGES.STATISTICS_HEADER}\n`;
-    message += `📊 Всего записей: ${totalRecords}\n`;
-    message += `📄 Страница: ${page} из ${totalPages}\n\n`;
-    
-    // Добавляем записи кормлений
-    for (const feeding of feedings) {
-      const user = await ctx.database.getUserById(feeding.userId);
-      const username = user?.username || 'Неизвестно';
-      
-      const date = feeding.timestamp.toLocaleDateString('ru-RU');
-      const time = feeding.timestamp.toLocaleTimeString('ru-RU', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      });
-      
-      const foodTypeIcon = feeding.foodType === 'dry' ? '🌾' : '🥫';
-      const foodTypeText = feeding.foodType === 'dry' ? 'Сухой' : 'Влажный';
-      
-      message += `📅 ${date} ${time}\n`;
-      message += `👤 ${username}\n`;
-      message += `${foodTypeIcon} ${foodTypeText} корм - ${feeding.amount}г\n`;
-      
-      if (feeding.details) {
-        message += `📝 ${feeding.details}\n`;
-      }
-      
-      message += '\n';
-    }
-    
     // Получаем запланированные кормления
     if (globalSchedulerService) {
       try {
@@ -107,7 +78,7 @@ async function showHistoryPage(ctx: BotContext, page: number) {
         );
         
         if (futureFeedings.length > 0) {
-          message += `\n📅 Следующие запланированные кормления:\n`;
+          message += `📅 Следующие запланированные кормления:\n`;
           
           // Сортируем по времени
           futureFeedings.sort((a: ScheduledFeeding, b: ScheduledFeeding) =>
@@ -121,23 +92,18 @@ async function showHistoryPage(ctx: BotContext, page: number) {
             const user = await ctx.database.getUserById(schedule.createdBy);
             const username = user?.username || 'Неизвестно';
             
-            const scheduledTime = schedule.scheduledTime.toLocaleString('ru-RU', {
-              day: '2-digit',
-              month: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit'
-            });
+            const scheduledTime = formatDateTime(schedule.scheduledTime);
             
             // Рассчитываем время до кормления
             const timeUntil = schedule.scheduledTime.getTime() - now.getTime();
-            const hours = Math.floor(timeUntil / (1000 * 60 * 60));
-            const minutes = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
+            const timeHours = Math.floor(timeUntil / (1000 * 60 * 60));
+            const timeMinutes = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
             
             let timeUntilText = '';
-            if (hours > 0) {
-              timeUntilText = `через ${hours} ч ${minutes} мин`;
+            if (timeHours > 0) {
+              timeUntilText = `через ${timeHours} ч ${timeMinutes} мин`;
             } else {
-              timeUntilText = `через ${minutes} мин`;
+              timeUntilText = `через ${timeMinutes} мин`;
             }
             
             message += `⏰ ${scheduledTime} (${timeUntilText}) - ${username}\n`;
@@ -146,6 +112,8 @@ async function showHistoryPage(ctx: BotContext, page: number) {
           if (futureFeedings.length > 3) {
             message += `... и еще ${futureFeedings.length - 3} кормлений\n`;
           }
+          
+          message += '\n';
         }
       } catch (error) {
         console.error('Ошибка при получении запланированных кормлений:', error);
@@ -171,13 +139,69 @@ async function showHistoryPage(ctx: BotContext, page: number) {
               timeUntilText = `через ${minutes} мин`;
             }
             
+            message += `⏰ Следующее автоматическое кормление:\n`;
+            const formattedTime = formatDateTime(nextFeedingInfo.time);
+            
+            message += `   ${formattedTime} (${timeUntilText})\n`;
+            
+            message += '\n';
+          }
+        }
+      } catch (error) {
+        console.error('Ошибка при получении информации о следующем автоматическом кормлении:', error);
+      }
+    }
+    
+    // Добавляем статистику
+    message += `${MESSAGES.STATISTICS_HEADER}\n`;
+    message += `📊 Всего записей: ${totalRecords}\n`;
+    message += `📄 Страница: ${page} из ${totalPages}\n\n`;
+    
+    // Добавляем записи кормлений
+    for (const feeding of feedings) {
+      const user = await ctx.database.getUserById(feeding.userId);
+      const username = user?.username || 'Неизвестно';
+      
+      const dateTime = formatDateTime(feeding.timestamp);
+      
+      const foodTypeIcon = feeding.foodType === 'dry' ? '🌾' : '🥫';
+      const foodTypeText = feeding.foodType === 'dry' ? 'Сухой' : 'Влажный';
+      
+      // Форматируем запись в соответствии с запросом пользователя
+      const foodTypeRussian = feeding.foodType === 'dry' ? 'сухого' : 'мокрого';
+      message += `📅 ${dateTime}\n`;
+      message += `   ${username} дал ${feeding.amount} грамм ${foodTypeRussian}\n`;
+      
+      if (feeding.details) {
+        message += `📝 ${feeding.details}\n`;
+      }
+      
+      message += '\n';
+    }
+    
+    // Получаем информацию о следующем автоматическом кормлении
+    if (globalTimerService) {
+      try {
+        const nextFeedingInfo = globalTimerService.getNextFeedingInfo();
+        if (nextFeedingInfo.isActive && nextFeedingInfo.time) {
+          const now = new Date();
+          const timeUntil = nextFeedingInfo.time.getTime() - now.getTime();
+          
+          if (timeUntil > 0) {
+            const hours = Math.floor(timeUntil / (1000 * 60 * 60));
+            const minutes = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
+            
+            let timeUntilText = '';
+            if (hours > 0) {
+              timeUntilText = `через ${hours} ч ${minutes} мин`;
+            } else {
+              timeUntilText = `через ${minutes} мин`;
+            }
+            
             message += `\n⏰ Следующее автоматическое кормление:\n`;
-            message += `   ${nextFeedingInfo.time.toLocaleString('ru-RU', {
-              day: '2-digit',
-              month: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit'
-            })} (${timeUntilText})\n`;
+            const formattedTime = formatDateTime(nextFeedingInfo.time);
+            
+            message += `   ${formattedTime} (${timeUntilText})\n`;
           }
         }
       } catch (error) {
