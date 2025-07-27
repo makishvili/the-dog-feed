@@ -4,7 +4,7 @@
 
 ```
 Domain: yourdomain.com
-Type: connection  
+Type: connection
 Detail: IP: Fetching http://yourdomain.com/.well-known/acme-challenge/XXX: Timeout during connect (likely firewall problem)
 ```
 
@@ -13,6 +13,7 @@ Detail: IP: Fetching http://yourdomain.com/.well-known/acme-challenge/XXX: Timeo
 ### 1. 🔍 Диагностика проблемы
 
 Запустите скрипт диагностики:
+
 ```bash
 ./scripts/maintenance/diagnose-connectivity.sh yourdomain.com
 ```
@@ -39,6 +40,7 @@ Detail: IP: Fetching http://yourdomain.com/.well-known/acme-challenge/XXX: Timeo
 ### 3. 🌐 Проверьте DNS настройки
 
 Убедитесь что домен указывает на IP вашего сервера:
+
 ```bash
 # Получите IP сервера
 curl https://ipv4.icanhazip.com
@@ -77,6 +79,7 @@ sudo netstat -tlnp | grep :80
 ### 6. 🔄 Повторная попытка SSL
 
 После исправления всех проблем:
+
 ```bash
 ./scripts/deployment/setup-nginx-yandex.sh yourdomain.com
 ```
@@ -84,16 +87,21 @@ sudo netstat -tlnp | grep :80
 ## 🆘 Частые проблемы и решения
 
 ### Проблема: DNS не обновился
+
 **Решение:** Подождите 10-60 минут для распространения DNS
 
-### Проблема: Nginx не слушает на внешних интерфейсах  
+### Проблема: Nginx не слушает на внешних интерфейсах
+
 **Решение:** Проверьте конфигурацию `listen 80;` (не `127.0.0.1:80`)
 
 ### Проблема: Порты заблокированы в Security Groups
+
 **Решение:** Обязательно откройте TCP/80 и TCP/443 для 0.0.0.0/0
 
 ### Проблема: Webroot недоступен
-**Решение:** 
+
+**Решение:**
+
 ```bash
 sudo mkdir -p /var/www/html/.well-known/acme-challenge
 sudo chown -R www-data:www-data /var/www/html
@@ -103,6 +111,7 @@ sudo chmod -R 755 /var/www/html
 ## 🎯 Быстрая проверка
 
 После исправления всех проблем проверьте:
+
 ```bash
 # Домен доступен по HTTP
 curl -I http://yourdomain.com/
@@ -122,4 +131,4 @@ curl -I http://yourdomain.com/
 
 1. Запустите диагностику: `./scripts/maintenance/diagnose-connectivity.sh`
 2. Проверьте логи: `sudo tail -f /var/log/nginx/error.log`
-3. Проверьте логи certbot: `sudo tail -f /var/log/letsencrypt/letsencrypt.log` 
+3. Проверьте логи certbot: `sudo tail -f /var/log/letsencrypt/letsencrypt.log`

@@ -16,21 +16,23 @@
 
 ```typescript
 if (NODE_ENV === 'production') {
-  BOT_TOKEN = process.env.BOT_TOKEN_PROD || process.env.BOT_TOKEN || '';
+    BOT_TOKEN = process.env.BOT_TOKEN_PROD || process.env.BOT_TOKEN || '';
 } else {
-  BOT_TOKEN = process.env.BOT_TOKEN_DEV || process.env.BOT_TOKEN || '';
+    BOT_TOKEN = process.env.BOT_TOKEN_DEV || process.env.BOT_TOKEN || '';
 }
 ```
 
 ## Режимы запуска
 
 ### Production (NODE_ENV=production)
+
 - Использует `BOT_TOKEN_PROD`
 - Запускается в режиме webhook
 - Устанавливает webhook на указанный URL
 - Обрабатывает rate limiting при установке webhook
 
 ### Development (NODE_ENV=development)
+
 - Использует `BOT_TOKEN_DEV`
 - Запускается в режиме polling
 - **НЕ удаляет webhook** для безопасности продакшенового бота
@@ -42,6 +44,7 @@ if (NODE_ENV === 'production') {
 Ранее в development режиме всегда выполнялся `bot.telegram.deleteWebhook()`, что могло повлиять на продакшеновый бот, если использовался тот же токен.
 
 Теперь webhook не удаляется в development режиме, что обеспечивает:
+
 - Безопасность продакшенового бота
 - Возможность одновременной работы dev и prod ботов
 - Отсутствие конфликтов между окружениями
@@ -51,18 +54,21 @@ if (NODE_ENV === 'production') {
 ### 1. Создание ботов
 
 Создайте два отдельных бота через @BotFather:
+
 1. Продакшеновый бот (например, `@your_prod_bot`)
 2. Девелоперский бот (например, `@your_dev_bot`)
 
 ### 2. Настройка переменных окружения
 
 #### Для локальной разработки (.env):
+
 ```bash
 NODE_ENV=development
 BOT_TOKEN_DEV=your_dev_bot_token_here
 ```
 
 #### Для продакшена:
+
 ```bash
 NODE_ENV=production
 BOT_TOKEN_PROD=your_prod_bot_token_here
@@ -90,5 +96,6 @@ BOT_TOKEN=your_bot_token_here
 ## Логирование
 
 Бот теперь выводит информацию о том, какой бот используется:
+
 - `Используется продакшеновый бот` - в production
 - `Используется девелоперский бот` - в development

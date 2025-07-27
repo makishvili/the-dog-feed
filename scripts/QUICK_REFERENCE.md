@@ -114,4 +114,4 @@ ssh username@vm-ip "pm2 restart dog-feeding-bot"
 2. **Посмотреть логи:** `./scripts/maintenance/logs-yandex.sh`
 3. **Диагностика:** `./scripts/maintenance/diagnose-connectivity.sh`
 4. **Документация:** `docs/SSL_TROUBLESHOOTING.md`
-5. **Крайний случай:** Полный пересброс и переразвертывание 
+5. **Крайний случай:** Полный пересброс и переразвертывание

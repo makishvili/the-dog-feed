@@ -3,11 +3,13 @@
 Проект: The Dog Feed - телеграм бот для учета кормлений собаки.
 
 ## Основные цели:
+
 - Упрощение отслеживания кормлений питомца
 - Напоминания о времени кормления
 - Анализ истории кормлений
 
 ## Ключевые функции:
+
 - Запись времени и типа корма
 - Настройка расписания кормлений
 - Просмотр истории кормлений
@@ -15,17 +17,19 @@
 - Экспорт данных
 
 ## Технологический стек:
+
 - **Backend**: Node.js + TypeScript
 - **Framework**: Telegraf для Telegram Bot API
 - **Database**: SQLite с таблицами:
-   - `users` (телеграм ID, настройки уведомлений)
-   - `feedings` (время, тип корма, количество)
-   - `settings` (ключ-значение)
-   - `scheduled_feedings` (расписания кормлений)
+    - `users` (телеграм ID, настройки уведомлений)
+    - `feedings` (время, тип корма, количество)
+    - `settings` (ключ-значение)
+    - `scheduled_feedings` (расписания кормлений)
 - **Infrastructure**: Yandex Cloud VM, PM2, Nginx
 - **Utils**: dotenv, ts-node, SQLite3
 
 ## Архитектурные компоненты:
+
 1. **Bot Controller** - инициализация бота, обработка команд
 2. **Database Service** - CRUD операции, миграции БД
 3. **Timer Service** - управление таймерами кормления
@@ -34,6 +38,7 @@
 6. **Scheduler Service** - управление расписаниями
 
 ## Диаграмма потока данных:
+
 ```mermaid
 sequenceDiagram
     participant User
@@ -41,7 +46,7 @@ sequenceDiagram
     participant TimerService
     participant Database
     participant NotificationService
-    
+
     User->>Bot: Сообщение о кормлении
     Bot->>Database: Сохранить данные
     Bot->>TimerService: Запустить таймер
@@ -50,6 +55,7 @@ sequenceDiagram
 ```
 
 ## Состояния бота (сцены):
+
 - Главное меню
 - корм
 - Управление расписанием

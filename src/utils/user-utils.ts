@@ -1,10 +1,10 @@
-import { DatabaseUser } from "../services/database";
+import { DatabaseUser } from '../services/database';
 
 /**
  * Нормализует username, добавляя @ если нужно
  */
 function normalizeUsername(username: string): string {
-  return username.startsWith("@") ? username : `@${username}`;
+    return username.startsWith('@') ? username : `@${username}`;
 }
 
 /**
@@ -14,14 +14,14 @@ function normalizeUsername(username: string): string {
  * @returns Строка с Markdown-ссылкой на пользователя или его имя
  */
 export function createUserLink(
-  user: DatabaseUser | null,
-  fallbackText = "Какой-то хороший человек"
+    user: DatabaseUser | null,
+    fallbackText = 'Какой-то хороший человек'
 ): string {
-  if (!user) return fallbackText;
+    if (!user) return fallbackText;
 
-  return user.username
-    ? normalizeUsername(user.username)
-    : `[Пользователь ${user.telegramId}](tg://user?id=${user.telegramId})`;
+    return user.username
+        ? normalizeUsername(user.username)
+        : `[Пользователь ${user.telegramId}](tg://user?id=${user.telegramId})`;
 }
 
 /**
@@ -31,12 +31,12 @@ export function createUserLink(
  * @returns Строка с именем пользователя или его ID
  */
 export function createUserText(
-  user: DatabaseUser | null,
-  fallbackText = "Какой-то хороший человек"
+    user: DatabaseUser | null,
+    fallbackText = 'Какой-то хороший человек'
 ): string {
-  if (!user) return fallbackText;
+    if (!user) return fallbackText;
 
-  return user.username
-    ? normalizeUsername(user.username)
-    : `Пользователь ${user.telegramId}`;
+    return user.username
+        ? normalizeUsername(user.username)
+        : `Пользователь ${user.telegramId}`;
 }

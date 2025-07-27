@@ -11,19 +11,24 @@
 ## Архитектурные принципы
 
 ### 1. Модульность
+
 Каждый компонент системы изолирован в отдельном модуле:
+
 - **Handlers** - обработка команд и кнопок
 - **Services** - бизнес-логика
 - **Database** - работа с данными
 - **Utils** - вспомогательные функции
 
 ### 2. Состояния (FSM)
+
 Использование Telegraf Scenes для управления состояниями:
+
 - Каждый экран = отдельная сцена
 - Переходы между сценами через контекст
 - Сохранение состояния пользователя
 
 ### 3. Персистентность
+
 - SQLite для надежного хранения данных
 - Восстановление состояния после перезапуска
 - Миграции схемы базы данных
@@ -31,6 +36,7 @@
 ## Структура базы данных
 
 ### Таблица `users`
+
 ```sql
 CREATE TABLE users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,6 +48,7 @@ CREATE TABLE users (
 ```
 
 ### Таблица `feedings`
+
 ```sql
 CREATE TABLE feedings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,6 +62,7 @@ CREATE TABLE feedings (
 ```
 
 ### Таблица `settings`
+
 ```sql
 CREATE TABLE settings (
     key TEXT PRIMARY KEY,
@@ -64,6 +72,7 @@ CREATE TABLE settings (
 ```
 
 ### Таблица `scheduled_feedings`
+
 ```sql
 CREATE TABLE scheduled_feedings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -78,30 +87,35 @@ CREATE TABLE scheduled_feedings (
 ## Основные компоненты
 
 ### 1. Bot Controller (`src/bot.ts`)
+
 - Инициализация бота
 - Регистрация middleware
 - Запуск сцен
 - Обработка ошибок
 
 ### 2. Database Service (`src/database/db.ts`)
+
 - Подключение к SQLite
 - CRUD операции
 - Миграции схемы
 - Транзакции
 
 ### 3. Timer Service (`src/services/timer.ts`)
+
 - Управление таймерами кормления
 - Отправка уведомлений
 - Повторные напоминания
 - Восстановление после перезапуска
 
 ### 4. Notification Service (`src/services/notifications.ts`)
+
 - Фильтрация получателей
 - Форматирование сообщений
 - Массовая отправка
 - Обработка ошибок отправки
 
 ### 5. Parser Service (`src/services/parser.ts`)
+
 - Парсинг времени (1мин, 2ч, 2:15)
 - Валидация ввода
 - Парсинг деталей кормления
@@ -116,13 +130,13 @@ graph TB
     C --> D[Handlers]
     D --> E[Services]
     E --> F[Database]
-    
+
     G[Timer Service] --> H[Notification Service]
     H --> A
-    
+
     I[Parser Service] --> E
     J[Export Service] --> E
-    
+
     F --> K[(SQLite Database)]
 ```
 
@@ -135,19 +149,19 @@ sequenceDiagram
     participant T as Timer Service
     participant D as Database
     participant N as Notification Service
-    
+
     U->>B: "Я покормил"
     B->>D: Сохранить кормление
     B->>T: Запустить таймер (3.5ч)
     B->>N: Уведомить всех "Собаку покормили"
-    
+
     Note over T: Ожидание 3.5 часа
-    
+
     T->>N: Отправить "Пора покормить!"
     N->>U: Уведомление всем пользователям
-    
+
     Note over T: Ожидание 10 минут
-    
+
     T->>N: Повторное напоминание
     N->>U: Повторное уведомление
 ```
@@ -155,6 +169,7 @@ sequenceDiagram
 ## Управление состояниями
 
 ### Основные сцены:
+
 1. **MainScene** - главный экран с 4 кнопками
 2. **SettingsScene** - меню настроек
 3. **FoodSettingsScene** - настройки корма
@@ -165,19 +180,20 @@ sequenceDiagram
 8. **ExportScene** - экспорт данных
 
 ### Переходы между сценами:
+
 ```mermaid
 stateDiagram-v2
     [*] --> MainScene
     MainScene --> SettingsScene: Настройки
     MainScene --> HistoryScene: История
     MainScene --> FeedingDetailsScene: Я покормил
-    
+
     SettingsScene --> FoodSettingsScene: корм
     SettingsScene --> IntervalSettingsScene: Интервал
     SettingsScene --> NotificationSettingsScene: Уведомления
-    
+
     HistoryScene --> ExportScene: Экспорт
-    
+
     FeedingDetailsScene --> MainScene: Готово
     SettingsScene --> MainScene: Назад
     HistoryScene --> MainScene: Назад
@@ -187,12 +203,14 @@ stateDiagram-v2
 ## Обработка ошибок
 
 ### Уровни обработки:
+
 1. **Bot Level** - глобальный обработчик ошибок
 2. **Scene Level** - обработка ошибок в сценах
 3. **Service Level** - обработка бизнес-логики
 4. **Database Level** - обработка ошибок БД
 
 ### Стратегии восстановления:
+
 - **Retry** - повторные попытки для сетевых операций
 - **Fallback** - резервные варианты для критических функций
 - **Graceful Degradation** - частичная функциональность при ошибках
@@ -201,12 +219,14 @@ stateDiagram-v2
 ## Безопасность
 
 ### Валидация данных:
+
 - Проверка типов входных данных
 - Санитизация пользовательского ввода
 - Ограничения на размер данных
 - Валидация временных интервалов
 
 ### Защита от злоупотреблений:
+
 - Rate limiting для команд
 - Валидация telegram_id
 - Ограничения на количество пользователей
@@ -215,12 +235,14 @@ stateDiagram-v2
 ## Производительность
 
 ### Оптимизации:
+
 - Индексы в базе данных
 - Кеширование настроек в памяти
 - Батчинг уведомлений
 - Ленивая загрузка истории
 
 ### Мониторинг:
+
 - Логирование времени выполнения
 - Отслеживание использования памяти
 - Мониторинг ошибок

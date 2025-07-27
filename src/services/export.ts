@@ -5,131 +5,147 @@ import { EXPORT_SETTINGS } from '../utils/constants';
 import { createUserText } from '../utils/user-utils';
 
 export interface ExportOptions {
-  format: 'csv' | 'html';
-  period?: 'week' | 'month' | 'all';
-  limit?: number;
+    format: 'csv' | 'html';
+    period?: 'week' | 'month' | 'all';
+    limit?: number;
 }
 
 export interface ExportResult {
-  filePath: string;
-  fileName: string;
-  recordCount: number;
-  fileSize: number;
+    filePath: string;
+    fileName: string;
+    recordCount: number;
+    fileSize: number;
 }
 
 export interface FeedingWithUser {
-  id: number;
-  userId: number;
-  timestamp: Date;
-  foodType: string;
-  amount: number;
-  details?: string;
-  username?: string;
+    id: number;
+    userId: number;
+    timestamp: Date;
+    foodType: string;
+    amount: number;
+    details?: string;
+    username?: string;
 }
 
 export class ExportService {
-  private database: DatabaseService;
-  private exportDir: string;
+    private database: DatabaseService;
+    private exportDir: string;
 
-  constructor(database: DatabaseService, exportDir: string = EXPORT_SETTINGS.EXPORT_DIR) {
-    this.database = database;
-    this.exportDir = exportDir;
-    
-    // Создаем директорию для экспорта если её нет
-    if (!fs.existsSync(exportDir)) {
-      fs.mkdirSync(exportDir, { recursive: true });
-    }
-  }
+    constructor(
+        database: DatabaseService,
+        exportDir: string = EXPORT_SETTINGS.EXPORT_DIR
+    ) {
+        this.database = database;
+        this.exportDir = exportDir;
 
-  // Экспорт истории кормлений
-  async exportFeedings(options: ExportOptions): Promise<ExportResult> {
-    const feedings = await this.getFeedingsForExport(options);
-    
-    if (feedings.length === 0) {
-      throw new Error('Нет данных для экспорта');
+        // Создаем директорию для экспорта если её нет
+        if (!fs.existsSync(exportDir)) {
+            fs.mkdirSync(exportDir, { recursive: true });
+        }
     }
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const fileName = `feedings_${options.format}_${timestamp}.${options.format}`;
-    const filePath = path.join(this.exportDir, fileName);
+    // Экспорт истории кормлений
+    async exportFeedings(options: ExportOptions): Promise<ExportResult> {
+        const feedings = await this.getFeedingsForExport(options);
 
-    let content: string;
-    
-    if (options.format === 'csv') {
-      content = this.generateCSV(feedings);
-    } else {
-      content = this.generateHTML(feedings);
+        if (feedings.length === 0) {
+            throw new Error('Нет данных для экспорта');
+        }
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const fileName = `feedings_${options.format}_${timestamp}.${options.format}`;
+        const filePath = path.join(this.exportDir, fileName);
+
+        let content: string;
+
+        if (options.format === 'csv') {
+            content = this.generateCSV(feedings);
+        } else {
+            content = this.generateHTML(feedings);
+        }
+
+        fs.writeFileSync(filePath, content, 'utf8');
+
+        const stats = fs.statSync(filePath);
+
+        return {
+            filePath,
+            fileName,
+            recordCount: feedings.length,
+            fileSize: stats.size,
+        };
     }
 
-    fs.writeFileSync(filePath, content, 'utf8');
-    
-    const stats = fs.statSync(filePath);
-    
-    return {
-      filePath,
-      fileName,
-      recordCount: feedings.length,
-      fileSize: stats.size
-    };
-  }
+    // Получение кормлений для экспорта с учетом периода
+    private async getFeedingsForExport(
+        options: ExportOptions
+    ): Promise<FeedingWithUser[]> {
+        let startDate: Date | undefined;
 
-  // Получение кормлений для экспорта с учетом периода
-  private async getFeedingsForExport(options: ExportOptions): Promise<FeedingWithUser[]> {
-    let startDate: Date | undefined;
-    
-    if (options.period === 'week') {
-      startDate = new Date();
-      startDate.setDate(startDate.getDate() - 7);
-    } else if (options.period === 'month') {
-      startDate = new Date();
-      startDate.setMonth(startDate.getMonth() - 1);
+        if (options.period === 'week') {
+            startDate = new Date();
+            startDate.setDate(startDate.getDate() - 7);
+        } else if (options.period === 'month') {
+            startDate = new Date();
+            startDate.setMonth(startDate.getMonth() - 1);
+        }
+
+        // Получаем кормления из базы данных
+        const feedings = await this.database.getFeedingsForPeriod(
+            startDate,
+            undefined,
+            options.limit
+        );
+
+        // Обогащаем данные пользователей
+        const enrichedFeedings: FeedingWithUser[] = [];
+
+        for (const feeding of feedings) {
+            const user = await this.database.getUserById(feeding.userId);
+            enrichedFeedings.push({
+                ...feeding,
+                username: createUserText(user),
+            });
+        }
+
+        return enrichedFeedings;
     }
 
-    // Получаем кормления из базы данных
-    const feedings = await this.database.getFeedingsForPeriod(startDate, undefined, options.limit);
-    
-    // Обогащаем данные пользователей
-    const enrichedFeedings: FeedingWithUser[] = [];
-    
-    for (const feeding of feedings) {
-      const user = await this.database.getUserById(feeding.userId);
-      enrichedFeedings.push({
-        ...feeding,
-        username: createUserText(user)
-      });
+    // Генерация CSV файла
+    private generateCSV(feedings: FeedingWithUser[]): string {
+        const headers = [
+            'Дата',
+            'Время',
+            'Пользователь',
+            'Тип корма',
+            'Количество (г)',
+            'Детали',
+        ];
+        const csvLines = [headers.join(',')];
+
+        feedings.forEach(feeding => {
+            const date = feeding.timestamp.toLocaleDateString('ru-RU');
+            const time = feeding.timestamp.toLocaleTimeString('ru-RU');
+            const username = feeding.username || 'Неизвестно';
+            const foodType = feeding.foodType === 'dry' ? 'Сухой' : 'Влажный';
+            const amount = feeding.amount.toString();
+            const details = (feeding.details || '').replace(/,/g, ';'); // Экранируем запятые
+
+            const row = [date, time, username, foodType, amount, details];
+            csvLines.push(row.map(field => `"${field}"`).join(','));
+        });
+
+        return csvLines.join('\n');
     }
-    
-    return enrichedFeedings;
-  }
 
-  // Генерация CSV файла
-  private generateCSV(feedings: FeedingWithUser[]): string {
-    const headers = ['Дата', 'Время', 'Пользователь', 'Тип корма', 'Количество (г)', 'Детали'];
-    const csvLines = [headers.join(',')];
+    // Генерация HTML файла
+    private generateHTML(feedings: FeedingWithUser[]): string {
+        const totalFeedings = feedings.length;
+        const dryCount = feedings.filter(f => f.foodType === 'dry').length;
+        const wetCount = feedings.filter(f => f.foodType === 'wet').length;
+        const totalAmount = feedings.reduce((sum, f) => sum + f.amount, 0);
 
-    feedings.forEach(feeding => {
-      const date = feeding.timestamp.toLocaleDateString('ru-RU');
-      const time = feeding.timestamp.toLocaleTimeString('ru-RU');
-      const username = feeding.username || 'Неизвестно';
-      const foodType = feeding.foodType === 'dry' ? 'Сухой' : 'Влажный';
-      const amount = feeding.amount.toString();
-      const details = (feeding.details || '').replace(/,/g, ';'); // Экранируем запятые
-
-      const row = [date, time, username, foodType, amount, details];
-      csvLines.push(row.map(field => `"${field}"`).join(','));
-    });
-
-    return csvLines.join('\n');
-  }
-
-  // Генерация HTML файла
-  private generateHTML(feedings: FeedingWithUser[]): string {
-    const totalFeedings = feedings.length;
-    const dryCount = feedings.filter(f => f.foodType === 'dry').length;
-    const wetCount = feedings.filter(f => f.foodType === 'wet').length;
-    const totalAmount = feedings.reduce((sum, f) => sum + f.amount, 0);
-
-    const statsHtml = `
+        const statsHtml = `
       <div class="stats">
         <h2>📊 Статистика</h2>
         <p><strong>Всего кормлений:</strong> ${totalFeedings}</p>
@@ -139,15 +155,17 @@ export class ExportService {
       </div>
     `;
 
-    const tableRows = feedings.map(feeding => {
-      const date = feeding.timestamp.toLocaleDateString('ru-RU');
-      const time = feeding.timestamp.toLocaleTimeString('ru-RU');
-      const username = feeding.username || 'Неизвестно';
-      const foodType = feeding.foodType === 'dry' ? 'Сухой' : 'Влажный';
-      const foodIcon = feeding.foodType === 'dry' ? '🌾' : '🥫';
-      const details = feeding.details || '-';
+        const tableRows = feedings
+            .map(feeding => {
+                const date = feeding.timestamp.toLocaleDateString('ru-RU');
+                const time = feeding.timestamp.toLocaleTimeString('ru-RU');
+                const username = feeding.username || 'Неизвестно';
+                const foodType =
+                    feeding.foodType === 'dry' ? 'Сухой' : 'Влажный';
+                const foodIcon = feeding.foodType === 'dry' ? '🌾' : '🥫';
+                const details = feeding.details || '-';
 
-      return `
+                return `
         <tr>
           <td>${date}</td>
           <td>${time}</td>
@@ -157,9 +175,10 @@ export class ExportService {
           <td>${details}</td>
         </tr>
       `;
-    }).join('');
+            })
+            .join('');
 
-    return `
+        return `
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -265,5 +284,5 @@ export class ExportService {
 </body>
 </html>
     `;
-  }
-} 
+    }
+}
