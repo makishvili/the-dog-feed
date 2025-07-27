@@ -226,43 +226,43 @@ bot.use((ctx, next) => {
     return next();
 });
 
-// Middleware для автоматического определения и сохранения часового пояса пользователя
-bot.use(async (ctx, next) => {
-    // Проверяем, что это текстовое сообщение и есть ctx.message.date
-    if (ctx.message && ctx.message.date && ctx.from && ctx.database) {
-        try {
-            // Получаем пользователя из базы данных
-            let dbUser = await ctx.database.getUserByTelegramId(ctx.from.id);
+// // Middleware для автоматического определения и сохранения часового пояса пользователя
+// bot.use(async (ctx, next) => {
+//     // Проверяем, что это текстовое сообщение и есть ctx.message.date
+//     if (ctx.message && ctx.message.date && ctx.from && ctx.database) {
+//         try {
+//             // Получаем пользователя из базы данных
+//             let dbUser = await ctx.database.getUserByTelegramId(ctx.from.id);
 
-            if (dbUser) {
-                // Определяем разницу во времени
-                const serverTime = new Date(); // Текущее время на сервере (UTC)
-                const userTime = ctx.message.date; // Локальное время пользователя
+//             if (dbUser) {
+//                 // Определяем разницу во времени
+//                 const serverTime = new Date(); // Текущее время на сервере (UTC)
+//                 const userTime = ctx.message.date; // Локальное время пользователя
 
-                const offsetMinutes = getTimeOffsetInMinutes(
-                    serverTime,
-                    userTime
-                );
-                const timezone = getTimezoneByOffset(offsetMinutes);
+//                 const offsetMinutes = getTimeOffsetInMinutes(
+//                     serverTime,
+//                     userTime
+//                 );
+//                 const timezone = getTimezoneByOffset(offsetMinutes);
 
-                // Если удалось определить часовой пояс, сохраняем его
-                if (timezone) {
-                    await ctx.database.updateUserTimezone(dbUser.id, timezone);
-                    console.log(
-                        `Автоматически определен и сохранен часовой пояс для пользователя ${dbUser.username || dbUser.telegramId}: ${timezone}`
-                    );
-                }
-            }
-        } catch (error) {
-            console.error(
-                'Ошибка при определении часового пояса пользователя:',
-                error
-            );
-        }
-    }
+//                 // Если удалось определить часовой пояс, сохраняем его
+//                 if (timezone) {
+//                     await ctx.database.updateUserTimezone(dbUser.id, timezone);
+//                     console.log(
+//                         `Автоматически определен и сохранен часовой пояс для пользователя ${dbUser.username || dbUser.telegramId}: ${timezone}`
+//                     );
+//                 }
+//             }
+//         } catch (error) {
+//             console.error(
+//                 'Ошибка при определении часового пояса пользователя:',
+//                 error
+//             );
+//         }
+//     }
 
-    return next();
-});
+//     return next();
+// });
 
 // Команды, которые используют сцены (должны быть ПОСЛЕ middleware)
 // Команда /start - переход к главной сцене

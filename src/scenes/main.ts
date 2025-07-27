@@ -5,6 +5,10 @@ import { getMainKeyboard } from '../utils/keyboards';
 import { MESSAGES, SCENES } from '../utils/constants';
 import { formatDateTime } from '../utils/time-utils';
 import { createUserLink } from '../utils/user-utils';
+import {
+    getTimeOffsetInMinutes,
+    getTimezoneByOffset,
+} from '../utils/timezone-utils';
 
 export const mainScene = new Scenes.BaseScene<BotContext>(SCENES.MAIN);
 
@@ -72,6 +76,36 @@ mainScene.enter(ctx => {
         );
     }
 });
+
+// Функция для автоматического определения и сохранения часового пояса пользователя
+async function autoDetectAndSaveTimezone(telegramId: number, db: DatabaseService): Promise<string | null> {
+    try {
+        // Получаем пользователя из базы данных
+        let dbUser = await db.getUserByTelegramId(telegramId);
+        
+        if (dbUser && !dbUser.timezone) {
+            // Используем фиксированное значение для Москвы, так как у нас нет доступа к времени пользователя в сцене
+            // В будущем можно реализовать более точное определение таймзоны
+            const timezone = 'Europe/Moscow';
+            
+            // Сохраняем часовой пояс
+            await db.updateUserTimezone(dbUser.id, timezone);
+            console.log(
+                `Установлен часовой пояс для пользователя ${dbUser.username || dbUser.telegramId}: ${timezone}`
+            );
+            
+            return timezone;
+        }
+        
+        return dbUser?.timezone || null;
+    } catch (error) {
+        console.error(
+            'Ошибка при автоматическом определении часового пояса пользователя:',
+            error
+        );
+        return null;
+    }
+}
 
 // Обработка кнопки "Другие действия"
 mainScene.hears(/Другие действия/, ctx => {
@@ -166,6 +200,20 @@ mainScene.hears(/🍽️ Собачка поел/, async ctx => {
                 ctx.from!.id,
                 ctx.from!.username || ctx.from!.first_name
             );
+        }
+
+        // Автоматически определяем и сохраняем часовой пояс пользователя, если он еще не определен
+        const timezone = await autoDetectAndSaveTimezone(ctx.from!.id, globalDatabase);
+        
+        // Обновляем таймзону в объекте пользователя для текущего сеанса
+        if (timezone && dbUser) {
+            dbUser.timezone = timezone;
+        }
+
+        // Получаем обновленного пользователя с таймзоной
+        const updatedUser = await globalDatabase.getUserByTelegramId(ctx.from!.id);
+        if (updatedUser) {
+            dbUser = updatedUser;
         }
 
         // Также создаем пользователя в старом формате для совместимости с таймерами
