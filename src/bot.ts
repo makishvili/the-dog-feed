@@ -2,7 +2,6 @@ import { Telegraf, Scenes, session } from 'telegraf';
 import * as dotenv from 'dotenv';
 import { BotContext, BotState, DatabaseBotState } from './types';
 import { TimerService } from './services/timer';
-import { MainHandler } from './handlers/main';
 import { DatabaseService } from './services/database';
 import { mainScene, setGlobalServices, setGlobalDatabaseForMain, getOrCreateUser } from './scenes/main';
 import { setGlobalServicesForInterval } from './scenes/interval-settings';
@@ -76,7 +75,6 @@ const databaseBotState: DatabaseBotState = {
 // Инициализация сервисов
 const timerService = new TimerService(bot, database);
 const schedulerService = new SchedulerService(database, timerService);
-const mainHandler = new MainHandler(timerService, database);
 
 // Установка глобальных сервисов для сцен
 setGlobalServices(timerService, database);

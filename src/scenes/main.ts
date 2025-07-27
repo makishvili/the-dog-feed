@@ -23,9 +23,6 @@ export function setGlobalDatabaseForMain(database: DatabaseService) {
   globalDatabase = database;
 }
 
-// Экспорт функции getOrCreateUser
-export { getOrCreateUser };
-
 // Функция для получения или создания пользователя
 async function getOrCreateUser(telegramId: number, username?: string): Promise<User> {
   if (!globalDatabase) {
@@ -184,7 +181,7 @@ mainScene.hears(/🍽️ Собачка поел/, async (ctx) => {
     const foodInfo = `${foodAmount}г ${foodType === 'dry' ? 'сухого' : 'влажного'} корма`;
 
     // Уведомление всех пользователей
-    const message = `🍽️ Собаку покормили!\n` +
+    const message = `🍽️ Собачка вкусно поел!\n` +
       `${formatDateTime(toMoscowTime(dbFeeding.timestamp)).replace(', ', ' в ')}\n` +
       `${createUserLink(dbUser)} дал ${foodInfo}\n\n` +
       `⏰ Следующее кормление в ${nextFeedingInfo.time ? nextFeedingInfo.time.getHours().toString().padStart(2, '0') + ':' + nextFeedingInfo.time.getMinutes().toString().padStart(2, '0') : 'неизвестно'} (через ${intervalText})`;
@@ -209,7 +206,7 @@ mainScene.hears(/🍽️ Собачка поел/, async (ctx) => {
     console.log(`Кормление записано в БД: ${dbUser.username} в ${toMoscowTime(dbFeeding.timestamp)}`);
 
     // Показываем сообщение об успешном кормлении и обновляем клавиатуру
-    await ctx.reply('✅ Кормление записано успешно!', getMainKeyboard(true));
+    await ctx.reply(message, getMainKeyboard(true));
   } catch (error) {
     console.error('Ошибка при обработке кормления:', error);
     ctx.reply('Произошла ошибка при записи кормления. Попробуйте еще раз.');
@@ -352,4 +349,5 @@ mainScene.on('text', (ctx) => {
   ctx.reply(MESSAGES.UNKNOWN_COMMAND, getMainKeyboard());
 });
 
-
+// Экспорт функции getOrCreateUser
+export { getOrCreateUser };

@@ -7,6 +7,7 @@ import { DatabaseService } from '../services/database';
 import { User } from '../types';
 import { toMoscowTime, formatDateTime } from '../utils/time-utils';
 import { createUserLink } from '../utils/user-utils';
+import { getOrCreateUser } from './main';
 
 let globalSchedulerService: SchedulerService | null = null;
 let globalDatabase: DatabaseService | null = null;
@@ -17,36 +18,6 @@ export function setGlobalSchedulerForScheduleFeeding(schedulerService: Scheduler
 
 export function setGlobalDatabaseForScheduleFeeding(database: DatabaseService) {
   globalDatabase = database;
-}
-
-// Функция для получения или создания пользователя
-async function getOrCreateUser(telegramId: number, username?: string): Promise<User> {
-  if (!globalDatabase) {
-    throw new Error('Database не инициализирована');
-  }
-  
-  let user = await globalDatabase.getUserByTelegramId(telegramId);
-
-  if (!user) {
-    user = await globalDatabase.createUser(telegramId, username);
-    // Создаем объект, соответствующий интерфейсу DatabaseUser
-    const dbUser = {
-      id: user.id,
-      telegramId: user.telegramId,
-      username: user.username,
-      notificationsEnabled: user.notificationsEnabled,
-      feedingInterval: user.feedingInterval || 210, // Значение по умолчанию
-      createdAt: user.createdAt
-    };
-    console.log(`Новый пользователь: ${createUserLink(dbUser)}`);
-  }
-
-  return {
-    id: user.id,
-    telegramId: user.telegramId,
-    username: user.username,
-    notificationsEnabled: user.notificationsEnabled
-  };
 }
 
 export const scheduleFeedingScene = new Scenes.BaseScene<BotContext>(SCENES.SCHEDULE_FEEDING);
