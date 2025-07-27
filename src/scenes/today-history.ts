@@ -100,37 +100,6 @@ todayHistoryScene.enter(async (ctx) => {
       }
     }
     
-    // Получаем информацию о следующем автоматическом кормлении
-    if (globalTimerService) {
-      try {
-        const nextFeedingInfo = globalTimerService.getNextFeedingInfo();
-        if (nextFeedingInfo.isActive && nextFeedingInfo.time) {
-          const now = new Date();
-          const timeUntil = nextFeedingInfo.time.getTime() - now.getTime();
-          
-          if (timeUntil > 0) {
-            const hours = Math.floor(timeUntil / (1000 * 60 * 60));
-            const minutes = Math.floor((timeUntil % (1000 * 60 * 60)) / (1000 * 60));
-            
-            let timeUntilText = '';
-            if (hours > 0) {
-              timeUntilText = `через ${hours} ч ${minutes} мин`;
-            } else {
-              timeUntilText = `через ${minutes} мин`;
-            }
-            
-            message += `⏰ Следующее автоматическое кормление:\n`;
-            const formattedTime = formatDateTime(nextFeedingInfo.time);
-            
-            message += `   ${formattedTime} (${timeUntilText})\n`;
-            
-            message += '\n';
-          }
-        }
-      } catch (error) {
-        console.error('Ошибка при получении информации о следующем автоматическом кормлении:', error);
-      }
-    }
 
     if (todayFeedings.length === 0) {
       message += '🍽️ Сегодня кормлений еще не было\n\n';

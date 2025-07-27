@@ -74,6 +74,45 @@ mainScene.hears(/Другие действия/, (ctx) => {
   ctx.scene.enter(SCENES.OTHER_ACTIONS);
 });
 
+// Обработка кнопки "Когда следующее кормление?"
+mainScene.hears(/Когда следующее кормление\?/, async (ctx) => {
+  try {
+    if (!globalTimerService) {
+      ctx.reply('Ошибка: сервис таймера не инициализирован. Попробуйте перезапустить бота командой /start');
+      return;
+    }
+
+    const nextFeedingInfo = globalTimerService.getNextFeedingInfo();
+    
+    if (!nextFeedingInfo.isActive || !nextFeedingInfo.time) {
+      ctx.reply('⏹️ Кормления приостановлены. Чтобы возобновить, нажмите "🍽️ Собачка поел"');
+      return;
+    }
+    
+    // Форматирование времени следующего кормления
+    const nextFeedingTime = nextFeedingInfo.time;
+    const timeString = nextFeedingTime.getHours().toString().padStart(2, '0') + ':' + nextFeedingTime.getMinutes().toString().padStart(2, '0');
+    
+    // Вычисление времени до следующего кормления
+    const now = new Date();
+    const timeDiff = nextFeedingTime.getTime() - now.getTime();
+    const hoursDiff = Math.floor(timeDiff / (1000 * 60 * 60));
+    const minutesDiff = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    let timeDiffString = '';
+    if (hoursDiff > 0) {
+      timeDiffString = `${hoursDiff} ч ${minutesDiff} мин`;
+    } else {
+      timeDiffString = `${minutesDiff} мин`;
+    }
+    
+    ctx.reply(`⏰ Следующее кормление: ${timeString} (через ${timeDiffString})`);
+  } catch (error) {
+    console.error('Ошибка при получении времени следующего кормления:', error);
+    ctx.reply('Произошла ошибка при получении времени следующего кормления. Попробуйте еще раз.');
+  }
+});
+
 // Обработка кнопки "Собачка поел"
 mainScene.hears(/🍽️ Собачка поел/, async (ctx) => {
   try {

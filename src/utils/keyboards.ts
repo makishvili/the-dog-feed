@@ -15,9 +15,8 @@ export function getMainKeyboard(showFeedingDetailsButton = false) {
   if (!showFeedingDetailsButton) {
     keyboard.push([`${EMOJIS.FEED} Собачка поел`]);
   }
-  
-  // Добавляем кнопку "другие действия"
-  keyboard.push(['Другие действия']);
+    
+  keyboard.push(['Когда следующее кормление?', 'Другие действия']);
   
   return Markup.keyboard(keyboard).resize();
 }
