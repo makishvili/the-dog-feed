@@ -2,6 +2,7 @@ import { Scenes } from 'telegraf';
 import { BotContext } from '../types';
 import { getOtherActionsKeyboard, getScheduleManagementKeyboard, getMainKeyboard } from '../utils/keyboards';
 import { MESSAGES, SCENES } from '../utils/constants';
+import { createUserLink } from '../utils/user-utils';
 
 // Глобальные переменные из main.ts
 let globalTimerService: any = null;
@@ -37,8 +38,18 @@ otherActionsScene.hears(/⏹️ Завершить кормления на се�
 
     globalTimerService.stopAllTimers();
 
+    // Создаем объект, соответствующий интерфейсу DatabaseUser
+    const dbUser = {
+      id: user.id,
+      telegramId: user.telegramId,
+      username: user.username,
+      notificationsEnabled: user.notificationsEnabled,
+      feedingInterval: user.feedingInterval || 210, // Значение по умолчанию
+      createdAt: new Date()
+    };
+
     const message = `${MESSAGES.FEEDINGS_STOPPED}\n` +
-      `Инициатор: ${user.username || 'Пользователь'}\n\n` +
+      `Инициатор: ${createUserLink(dbUser)}\n\n` +
       `Чтобы возобновить кормления, нажмите "🍽️ Собачка поел"`;
 
     // Уведомление всех пользователей через базу данных

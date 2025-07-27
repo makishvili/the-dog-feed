@@ -5,6 +5,7 @@ import { MESSAGES, SCENES, EXPORT_SETTINGS } from '../utils/constants';
 import { ScheduledFeeding } from '../services/scheduler';
 import { TimerService } from '../services/timer';
 import { formatDateTime } from '../utils/time-utils';
+import { createUserLink } from '../utils/user-utils';
 
 // Глобальные переменные для доступа к сервисам
 let globalSchedulerService: any = null;
@@ -90,7 +91,7 @@ async function showHistoryPage(ctx: BotContext, page: number) {
           
           for (const schedule of displayFeedings) {
             const user = await ctx.database.getUserById(schedule.createdBy);
-            const username = user?.username || 'Неизвестно';
+            const username = createUserLink(user);
             
             const scheduledTime = formatDateTime(schedule.scheduledTime);
             
@@ -129,7 +130,7 @@ async function showHistoryPage(ctx: BotContext, page: number) {
     // Добавляем записи кормлений
     for (const feeding of feedings) {
       const user = await ctx.database.getUserById(feeding.userId);
-      const username = user?.username || 'Неизвестно';
+      const username = createUserLink(user);
       
       const dateTime = formatDateTime(feeding.timestamp);
       

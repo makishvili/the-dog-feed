@@ -1,5 +1,6 @@
 import { Telegraf } from 'telegraf';
 import { DatabaseService, DatabaseUser } from './database';
+import { createUserText } from '../utils/user-utils';
 
 export interface NotificationOptions {
   excludeUser?: number; // ID пользователя, которого нужно исключить
@@ -50,7 +51,7 @@ export class NotificationService {
 
     try {
       await this.bot.telegram.sendMessage(user.telegramId, message);
-      console.log(`Уведомление отправлено пользователю: ${user.username || user.telegramId}`);
+      console.log(`Уведомление отправлено пользователю: ${createUserText(user)}`);
     } catch (error) {
       console.error(`Ошибка отправки уведомления пользователю ${user.telegramId}:`, error);
       throw error; // Пробрасываем ошибку для обработки в sendToAll
@@ -84,10 +85,10 @@ export class NotificationService {
       const users = await this.database.getAllUsers();
       const enabledUsers = users.filter(u => u.notificationsEnabled);
       const disabledUsers = users.filter(u => !u.notificationsEnabled);
-
-      const enabledUsersList = enabledUsers.map(u => u.username || `ID: ${u.telegramId}`);
-      const disabledUsersList = disabledUsers.map(u => u.username || `ID: ${u.telegramId}`);
-
+      
+      const enabledUsersList = enabledUsers.map(u => createUserText(u));
+      const disabledUsersList = disabledUsers.map(u => createUserText(u));
+      
       return {
         totalUsers: users.length,
         enabledUsers: enabledUsers.length,

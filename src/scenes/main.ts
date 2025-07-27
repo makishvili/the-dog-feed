@@ -4,6 +4,7 @@ import { DatabaseService } from '../services/database';
 import { getMainKeyboard } from '../utils/keyboards';
 import { MESSAGES, SCENES } from '../utils/constants';
 import { toMoscowTime, formatDateTime } from '../utils/time-utils';
+import { createUserLink } from '../utils/user-utils';
 
 export const mainScene = new Scenes.BaseScene<BotContext>(SCENES.MAIN);
 
@@ -185,7 +186,7 @@ mainScene.hears(/🍽️ Собачка поел/, async (ctx) => {
     // Уведомление всех пользователей
     const message = `🍽️ Собаку покормили!\n` +
       `${formatDateTime(toMoscowTime(dbFeeding.timestamp)).replace(', ', ' в ')}\n` +
-      `${dbUser.username || 'Пользователь'} дал ${foodInfo}\n\n` +
+      `${createUserLink(dbUser)} дал ${foodInfo}\n\n` +
       `⏰ Следующее кормление в ${nextFeedingInfo.time ? nextFeedingInfo.time.getHours().toString().padStart(2, '0') + ':' + nextFeedingInfo.time.getMinutes().toString().padStart(2, '0') : 'неизвестно'} (через ${intervalText})`;
 
     // Получаем всех пользователей из базы данных для уведомлений
@@ -230,8 +231,18 @@ mainScene.hears(/⏹️ Завершить кормления на сегодн�
 
     globalTimerService.stopAllTimers();
 
+    // Создаем объект, соответствующий интерфейсу DatabaseUser
+    const dbUser = {
+      id: user.id,
+      telegramId: user.telegramId,
+      username: user.username,
+      notificationsEnabled: user.notificationsEnabled,
+      feedingInterval: user.feedingInterval || 210, // Значение по умолчанию
+      createdAt: new Date()
+    };
+
     const message = `${MESSAGES.FEEDINGS_STOPPED}\n` +
-      `Инициатор: ${user.username || 'Пользователь'}\n\n` +
+      `Инициатор: ${createUserLink(dbUser)}\n\n` +
       `Чтобы возобновить кормления, нажмите "🍽️ Собачка поел"`;
 
     // Уведомление всех пользователей через базу данных
@@ -272,9 +283,10 @@ mainScene.command('status', async (ctx) => {
     
     if (lastFeeding) {
       const lastUser = await globalDatabase.getUserById(lastFeeding.userId);
+      const username = createUserLink(lastUser);
       message += `🍽️ Последнее кормление:\n`;
       message += `   Время: ${formatDateTime(toMoscowTime(lastFeeding.timestamp))}\n`;
-      message += `   Кто: ${lastUser?.username || 'Неизвестно'}\n\n`;
+      message += `   Кто: ${username}\n\n`;
     } else {
       message += `🍽️ Кормлений еще не было\n\n`;
     }

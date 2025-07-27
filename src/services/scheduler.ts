@@ -1,6 +1,7 @@
 import { DatabaseService, DatabaseScheduledFeeding } from './database';
 import { TimerService } from './timer';
 import { SCHEDULER_SETTINGS } from '../utils/constants';
+import { createUserText } from '../utils/user-utils';
 
 export interface ScheduledFeeding {
   id: number;
@@ -70,7 +71,9 @@ export class SchedulerService {
       // Создаем таймер
       await this.createTimer(schedule);
       
-      console.log(`Запланировано кормление на ${scheduledTime.toLocaleString('ru-RU')} пользователем ${createdBy}`);
+      // Получаем пользователя для логирования
+      const user = await this.database.getUserById(createdBy);
+      console.log(`Запланировано кормление на ${scheduledTime.toLocaleString('ru-RU')} пользователем ${createUserText(user)}`);
       
       return {
         id: schedule.id,

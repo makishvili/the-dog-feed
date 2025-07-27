@@ -4,6 +4,7 @@ import { getScheduledListKeyboard } from '../utils/keyboards';
 import { MESSAGES, SCENES } from '../utils/constants';
 import { SchedulerService } from '../services/scheduler';
 import { toMoscowTime, formatDateTime } from '../utils/time-utils';
+import { createUserLink } from '../utils/user-utils';
 
 let globalSchedulerService: SchedulerService | null = null;
 
@@ -48,7 +49,7 @@ async function showScheduledList(ctx: BotContext) {
 
     for (const schedule of scheduledFeedings) {
       const user = await ctx.database.getUserById(schedule.createdBy);
-      const username = user?.username || 'Неизвестно';
+      const username = createUserLink(user);
       
       const scheduledTime = formatDateTime(toMoscowTime(schedule.scheduledTime));
       const createdTime = formatDateTime(toMoscowTime(schedule.createdAt));
@@ -146,7 +147,17 @@ scheduledListScene.hears(/❌ Отменить кормление (\d+)/, async 
     // Отменяем кормление
     await globalSchedulerService.cancelScheduledFeeding(scheduleId);
     
-    const username = ctx.from?.username || ctx.from?.first_name || 'Пользователь';
+    // Создаем объект, соответствующий интерфейсу DatabaseUser
+    const dbUser = {
+      id: ctx.from?.id || 0,
+      telegramId: ctx.from?.id || 0,
+      username: ctx.from?.username || ctx.from?.first_name,
+      notificationsEnabled: true, // Предполагаем, что у пользователя включены уведомления
+      feedingInterval: 210, // Значение по умолчанию
+      createdAt: new Date()
+    };
+    
+    const username = createUserLink(dbUser);
     
     ctx.reply(
       `✅ Кормление отменено!\n\n` +
@@ -202,7 +213,17 @@ scheduledListScene.hears(/❌ Отменить все/, async (ctx) => {
       return;
     }
     
-    const username = ctx.from?.username || ctx.from?.first_name || 'Пользователь';
+    // Создаем объект, соответствующий интерфейсу DatabaseUser
+    const dbUser = {
+      id: ctx.from?.id || 0,
+      telegramId: ctx.from?.id || 0,
+      username: ctx.from?.username || ctx.from?.first_name,
+      notificationsEnabled: true, // Предполагаем, что у пользователя включены уведомления
+      feedingInterval: 210, // Значение по умолчанию
+      createdAt: new Date()
+    };
+    
+    const username = createUserLink(dbUser);
     
     ctx.reply(
       `✅ Все кормления отменены!\n\n` +

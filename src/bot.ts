@@ -22,6 +22,7 @@ import { SchedulerService } from './services/scheduler';
 import { SCENES } from './utils/constants';
 import { TimeParser } from './services/parser';
 import { toMoscowTime, formatDateTime } from './utils/time-utils';
+import { createUserLink } from './utils/user-utils';
 
 // Загрузка переменных окружения
 dotenv.config();
@@ -157,7 +158,7 @@ bot.command('scheduler', async (ctx) => {
       message += `  🆔 ID: ${stats.nextSchedule.id}\n`;
       
       const user = await database.getUserById(stats.nextSchedule.createdBy);
-      message += `  👤 Создал: ${user?.username || 'Неизвестно'}\n`;
+      message += `  👤 Создал: ${createUserLink(user)}\n`;
     } else {
       message += `⏰ Нет запланированных кормлений`;
     }
@@ -191,7 +192,7 @@ bot.start(async (ctx) => {
         ctx.from.id,
         ctx.from.username || ctx.from.first_name
       );
-      console.log(`Новый пользователь создан в БД: ${dbUser.username || dbUser.telegramId}`);
+      console.log(`Новый пользователь создан в БД: ${createUserLink(dbUser)}`);
     }
     
     console.log(`Пользователь ${dbUser.username || dbUser.telegramId} запустил бота`);
@@ -235,7 +236,7 @@ bot.command('status', async (ctx) => {
       message += `   ID: ${nextScheduled.id}\n`;
       
       const scheduleUser = await database.getUserById(nextScheduled.createdBy);
-      message += `   Создал: ${scheduleUser?.username || 'Неизвестно'}\n`;
+      message += `   Создал: ${createUserLink(scheduleUser)}\n`;
     }
 
     // Добавляем статистику из БД

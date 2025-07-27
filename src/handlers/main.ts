@@ -5,6 +5,7 @@ import { TimerService } from '../services/timer';
 import { DatabaseService } from '../services/database';
 import { MESSAGES, SCENES } from '../utils/constants';
 import { toMoscowTime, formatDateTime } from '../utils/time-utils';
+import { createUserLink } from '../utils/user-utils';
 
 export class MainHandler {
   private timerService: TimerService;
@@ -48,7 +49,7 @@ export class MainHandler {
       
       const message = `🍽️ Собаку покормили!\n` +
         `${formatDateTime(toMoscowTime(feeding.timestamp)).replace(', ', ' в ')}\n` +
-        `${user.username || 'Пользователь'} дал ${foodInfo}\n\n` +
+        `${createUserLink(user)} дал ${foodInfo}\n\n` +
         `⏰ Следующее кормление в ${formattedNextTime} (через ${Math.round(this.timerService.getCurrentInterval() / 60)} ч ${this.timerService.getCurrentInterval() % 60} мин)`;
 
       const notificationService = this.timerService.getNotificationService();
@@ -73,7 +74,7 @@ export class MainHandler {
       this.timerService.stopAllTimers();
 
       const message = `${MESSAGES.FEEDINGS_STOPPED}\n` +
-        `Инициатор: ${user.username || 'Пользователь'}\n\n` +
+        `Инициатор: ${createUserLink(user)}\n\n` +
         `Чтобы возобновить кормления, нажмите "🍽️ Собачка поел"`;
 
       // Уведомление всех пользователей через NotificationService

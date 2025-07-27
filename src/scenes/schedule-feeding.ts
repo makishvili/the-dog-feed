@@ -6,6 +6,7 @@ import { SchedulerService } from '../services/scheduler';
 import { DatabaseService } from '../services/database';
 import { User } from '../types';
 import { toMoscowTime, formatDateTime } from '../utils/time-utils';
+import { createUserLink } from '../utils/user-utils';
 
 let globalSchedulerService: SchedulerService | null = null;
 let globalDatabase: DatabaseService | null = null;
@@ -28,7 +29,16 @@ async function getOrCreateUser(telegramId: number, username?: string): Promise<U
 
   if (!user) {
     user = await globalDatabase.createUser(telegramId, username);
-    console.log(`Новый пользователь: ${username || telegramId}`);
+    // Создаем объект, соответствующий интерфейсу DatabaseUser
+    const dbUser = {
+      id: user.id,
+      telegramId: user.telegramId,
+      username: user.username,
+      notificationsEnabled: user.notificationsEnabled,
+      feedingInterval: user.feedingInterval || 210, // Значение по умолчанию
+      createdAt: user.createdAt
+    };
+    console.log(`Новый пользователь: ${createUserLink(dbUser)}`);
   }
 
   return {
@@ -159,11 +169,21 @@ scheduleFeedingScene.on('text', async (ctx) => {
     
     // Планируем кормление с правильным ID пользователя
     const schedule = await globalSchedulerService.scheduleFeeding(
-      scheduledTime, 
+      scheduledTime,
       user.id  // Используем внутренний ID пользователя, а не Telegram ID
     );
     
-    const username = ctx.from?.username || ctx.from?.first_name || 'Пользователь';
+    // Создаем объект, соответствующий интерфейсу DatabaseUser
+    const dbUser = {
+      id: user.id,
+      telegramId: user.telegramId,
+      username: user.username,
+      notificationsEnabled: user.notificationsEnabled,
+      feedingInterval: user.feedingInterval || 210, // Значение по умолчанию
+      createdAt: new Date()
+    };
+    
+    const username = createUserLink(dbUser);
     
     // Отправляем подтверждение
     ctx.reply(

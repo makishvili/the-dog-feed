@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { DatabaseService } from './database';
 import { EXPORT_SETTINGS } from '../utils/constants';
+import { createUserText } from '../utils/user-utils';
 
 export interface ExportOptions {
   format: 'csv' | 'html';
@@ -94,7 +95,7 @@ export class ExportService {
       const user = await this.database.getUserById(feeding.userId);
       enrichedFeedings.push({
         ...feeding,
-        username: user?.username || 'Неизвестно'
+        username: createUserText(user)
       });
     }
     
