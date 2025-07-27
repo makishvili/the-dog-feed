@@ -180,22 +180,16 @@ bot.use((ctx, next) => {
   
   // Middleware для автоматического определения и сохранения часового пояса пользователя
   bot.use(async (ctx, next) => {
-    console.log('============= ctx.message.date = ', ctx.message.date)
-    console.log('============= ctx.from = ', ctx.from)
-    console.log('============= ctx.database = ', ctx.database)
     // Проверяем, что это текстовое сообщение и есть ctx.message.date
     if (ctx.message && ctx.message.date && ctx.from && ctx.database) {
       try {
         // Получаем пользователя из базы данных
         let dbUser = await ctx.database.getUserByTelegramId(ctx.from.id);
         
-        console.log('dbUser.timezone = ', dbUser.timezone)
         if (dbUser) {
           // Определяем разницу во времени
           const serverTime = new Date(); // Текущее время на сервере (UTC)
           const userTime = ctx.message.date; // Локальное время пользователя
-    console.log('============= serverTime = ', serverTime)
-    console.log('============= userTime = ', ctx.message.date)
           
           const offsetMinutes = getTimeOffsetInMinutes(serverTime, userTime);
           const timezone = getTimezoneByOffset(offsetMinutes);
