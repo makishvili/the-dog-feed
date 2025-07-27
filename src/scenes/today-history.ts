@@ -196,8 +196,8 @@ todayHistoryScene.enter(async (ctx) => {
     message += `• Пользователей: ${stats.totalUsers}`;
 
     ctx.reply(message, Markup.keyboard([
-      ['🔄 Обновить', '📋 Вся история'],
-      ['🏠 Главный экран']
+      ['🔄 Обновить'],
+      ['⬅️ Назад', '🏠 Главный экран']
     ]).resize());
 
   } catch (error) {
@@ -219,6 +219,11 @@ todayHistoryScene.hears(/🔄 Обновить/, async (ctx) => {
 
 // Обработка кнопки "Вся история"
 todayHistoryScene.hears(/📋 Вся история/, (ctx) => {
+  ctx.scene.enter(SCENES.HISTORY);
+});
+
+// Обработка кнопки "Назад"
+todayHistoryScene.hears(/⬅️ Назад/, (ctx) => {
   ctx.scene.enter(SCENES.HISTORY);
 });
 
@@ -279,8 +284,8 @@ todayHistoryScene.on('text', (ctx) => {
   ctx.reply(
     'Я не понимаю эту команду. Используйте кнопки меню.',
     Markup.keyboard([
-      ['🔄 Обновить', '📋 Вся история'],
-      ['🏠 Главный экран']
+      ['🔄 Обновить'],
+      ['⬅️ Назад', '🏠 Главный экран']
     ]).resize()
   );
 });

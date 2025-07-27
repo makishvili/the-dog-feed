@@ -20,6 +20,7 @@ historyScene.hears(/📋 всё время/, (ctx) => {
   ctx.scene.enter(SCENES.FULL_HISTORY);
 });
 
+
 // Обработка кнопки "На главную"
 historyScene.hears(/🏠 На главную/, (ctx) => {
   ctx.scene.enter(SCENES.MAIN);
@@ -43,3 +44,4 @@ historyScene.on('text', (ctx) => {
     getHistoryKeyboard()
   );
 });
+

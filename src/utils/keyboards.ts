@@ -84,8 +84,8 @@ export function getScheduledItemKeyboard(scheduleId: number) {
 export function getFullHistoryKeyboard() {
   return Markup.keyboard([
     ['📤 Экспорт истории', '🔍 Фильтры'],
-    ['◀️ На главную', '▶️ Далее'],
-    ['🏠 На главную']
+    ['▶️ Далее'],
+    ['⬅️ Назад', '🏠 На главную']
   ]).resize();
 }
 
@@ -118,7 +118,7 @@ export function getPaginationKeyboard(currentPage: number, totalPages: number, h
   
   // Дополнительные действия
   buttons.push(['📤 Экспорт истории']);
-  buttons.push(['🏠 На главную']);
+  buttons.push(['⬅️ Назад', '🏠 На главную']);
   
   return Markup.keyboard(buttons).resize();
 }
