@@ -5,29 +5,44 @@
 
 ## Результат этапа
 Бот с функциональностью:
-- Экран "корм" с выбором типа и количества
-- Выбор типа корма: "Сухой" или "Влажный"
-- Настройка количества корма от 1 до 200 граммов
+- Экран "корм" с возможностью ввода типа и количества корма
+- Поддержка различных форматов ввода типа и количества корма
 - Сохранение настроек в БД (глобально для всех пользователей)
 - Применение настроек к новым кормлениям
 - Отображение текущих настроек
+- Поясняющий текст с примерами форматов
 
 ## Новые/измененные файлы
 
-### 1. `src/scenes/food-settings.ts` (новый)
+### 1. `src/scenes/food-settings.ts` (обновленный)
 ```typescript
 import { Scenes, Markup } from 'telegraf';
 import { BotContext } from '../types';
+import { DatabaseService } from '../services/database';
+import { FeedingParser } from '../services/feeding-parser';
 import { SCENES } from '../utils/constants';
 
 export const foodSettingsScene = new Scenes.BaseScene<BotContext>(SCENES.FOOD_SETTINGS);
 
+// Глобальная переменная для доступа к базе данных
+let globalDatabase: DatabaseService | null = null;
+
+// Функция для установки глобальной базы данных
+export function setGlobalDatabaseForFoodSettings(database: DatabaseService) {
+  globalDatabase = database;
+}
+
 // Вход в сцену настроек корма
 foodSettingsScene.enter(async (ctx) => {
   try {
+    if (!globalDatabase) {
+      ctx.reply('Ошибка: база данных не инициализирована. Попробуйте перезапустить бота командой /start');
+      return;
+    }
+
     // Получаем текущие настройки из БД
-    const currentType = await ctx.database.getSetting('default_food_type') || 'dry';
-    const currentAmount = await ctx.database.getSetting('default_food_amount') || '12';
+    const currentType = await globalDatabase.getSetting('default_food_type') || 'dry';
+    const currentAmount = await globalDatabase.getSetting('default_food_amount') || '12';
     
     const typeText = currentType === 'dry' ? 'Сухой' : 'Влажный';
     
@@ -35,296 +50,131 @@ foodSettingsScene.enter(async (ctx) => {
       `Текущие настройки:\n` +
       `• Тип корма: ${typeText}\n` +
       `• Количество: ${currentAmount} граммов\n\n` +
-      `Выберите что изменить:`;
+      `Введите новые настройки корма:\n\n` +
+      `Примеры форматов:\n` +
+      FeedingParser.getExamples().map(example => `• ${example}`).join('\n');
 
     ctx.reply(message, Markup.keyboard([
-      ['🥘 Тип корма', '⚖️ Количество корма'],
-      ['🏠 Выйти на главный экран']
+      ['🏠 На главную']
     ]).resize());
 
   } catch (error) {
     console.error('Ошибка получения настроек корма:', error);
     ctx.reply(
       '❌ Ошибка получения настроек. Попробуйте еще раз.',
-      Markup.keyboard([['🏠 Выйти на главный экран']]).resize()
+      Markup.keyboard([['🏠 На главную']]).resize()
     );
   }
 });
 
-// Обработка кнопки "Тип корма"
-foodSettingsScene.hears(/🥘 Тип корма/, (ctx) => {
-  ctx.scene.enter(SCENES.FOOD_TYPE_SETTINGS);
-});
-
-// Обработка кнопки "Количество корма"
-foodSettingsScene.hears(/⚖️ Количество корма/, (ctx) => {
-  ctx.scene.enter(SCENES.FOOD_AMOUNT_SETTINGS);
-});
-
-// Обработка кнопки "Выйти на главный экран"
-foodSettingsScene.hears(/🏠 Выйти на главный экран/, (ctx) => {
-  ctx.scene.enter(SCENES.MAIN);
-});
-
-// Обработка неизвестных команд
-foodSettingsScene.on('text', (ctx) => {
-  ctx.reply(
-    'Используйте кнопки меню для навигации.',
-    Markup.keyboard([
-      ['🥘 Тип корма', '⚖️ Количество корма'],
-      ['🏠 Выйти на главный экран']
-    ]).resize()
-  );
-});
-```
-
-### 2. `src/scenes/food-type-settings.ts` (новый)
-```typescript
-import { Scenes, Markup } from 'telegraf';
-import { BotContext } from '../types';
-import { SCENES } from '../utils/constants';
-
-export const foodTypeSettingsScene = new Scenes.BaseScene<BotContext>(SCENES.FOOD_TYPE_SETTINGS);
-
-// Вход в сцену выбора типа корма
-foodTypeSettingsScene.enter(async (ctx) => {
-  try {
-    const currentType = await ctx.database.getSetting('default_food_type') || 'dry';
-    const currentTypeText = currentType === 'dry' ? 'Сухой' : 'Влажный';
-    
-    const message = `🥘 Выбор типа корма\n\n` +
-      `Текущий тип: ${currentTypeText}\n\n` +
-      `Выберите новый тип корма:`;
-
-    ctx.reply(message, Markup.keyboard([
-      ['🌾 Сухой', '🥫 Влажный'],
-      ['🍽️ корм', '🏠 Главный экран']
-    ]).resize());
-
-  } catch (error) {
-    console.error('Ошибка получения типа корма:', error);
-    ctx.reply('❌ Ошибка получения данных');
-  }
-});
-
-// Обработка выбора "Сухой"
-foodTypeSettingsScene.hears(/🌾 Сухой/, async (ctx) => {
-  try {
-    await ctx.database.setSetting('default_food_type', 'dry');
-    
-    const user = await ctx.database.getUserByTelegramId(ctx.from!.id);
-    
-    const message = `✅ Тип корма изменен на "Сухой"\n\n` +
-      `Изменения применятся к следующим кормлениям.\n` +
-      `Инициатор: ${user?.username || 'Пользователь'}`;
-
-    // Уведомление всех пользователей об изменении
-    const allUsers = await ctx.database.getAllUsers();
-    for (const u of allUsers) {
-      if (u.notificationsEnabled) {
-        try {
-          await ctx.telegram.sendMessage(u.telegramId, `🌾 ${message}`);
-        } catch (error) {
-          console.error(`Ошибка отправки уведомления пользователю ${u.telegramId}:`, error);
-        }
-      }
-    }
-
-    console.log(`Тип корма изменен на "dry" пользователем ${user?.username}`);
-    
-    // Возврат к настройкам корма
-    setTimeout(() => {
-      ctx.scene.enter(SCENES.FOOD_SETTINGS);
-    }, 1500);
-
-  } catch (error) {
-    console.error('Ошибка сохранения типа корма:', error);
-    ctx.reply('❌ Ошибка сохранения настроек');
-  }
-});
-
-// Обработка выбора "Влажный"
-foodTypeSettingsScene.hears(/🥫 Влажный/, async (ctx) => {
-  try {
-    await ctx.database.setSetting('default_food_type', 'wet');
-    
-    const user = await ctx.database.getUserByTelegramId(ctx.from!.id);
-    
-    const message = `✅ Тип корма изменен на "Влажный"\n\n` +
-      `Изменения применятся к следующим кормлениям.\n` +
-      `Инициатор: ${user?.username || 'Пользователь'}`;
-
-    // Уведомление всех пользователей об изменении
-    const allUsers = await ctx.database.getAllUsers();
-    for (const u of allUsers) {
-      if (u.notificationsEnabled) {
-        try {
-          await ctx.telegram.sendMessage(u.telegramId, `🥫 ${message}`);
-        } catch (error) {
-          console.error(`Ошибка отправки уведомления пользователю ${u.telegramId}:`, error);
-        }
-      }
-    }
-
-    console.log(`Тип корма изменен на "wet" пользователем ${user?.username}`);
-    
-    // Возврат к настройкам корма
-    setTimeout(() => {
-      ctx.scene.enter(SCENES.FOOD_SETTINGS);
-    }, 1500);
-
-  } catch (error) {
-    console.error('Ошибка сохранения типа корма:', error);
-    ctx.reply('❌ Ошибка сохранения настроек');
-  }
-});
-
-// Обработка кнопки "корм"
-foodTypeSettingsScene.hears(/🍽️ корм/, (ctx) => {
-  ctx.scene.enter(SCENES.FOOD_SETTINGS);
-});
-
-// Обработка кнопки "Главный экран"
-foodTypeSettingsScene.hears(/🏠 Главный экран/, (ctx) => {
-  ctx.scene.enter(SCENES.MAIN);
-});
-
-// Обработка неизвестных команд
-foodTypeSettingsScene.on('text', (ctx) => {
-  ctx.reply(
-    'Выберите тип корма из предложенных вариантов.',
-    Markup.keyboard([
-      ['🌾 Сухой', '🥫 Влажный'],
-      ['🍽️ корм', '🏠 Главный экран']
-    ]).resize()
-  );
-});
-```
-
-### 3. `src/scenes/food-amount-settings.ts` (новый)
-```typescript
-import { Scenes, Markup } from 'telegraf';
-import { BotContext } from '../types';
-import { SCENES } from '../utils/constants';
-
-export const foodAmountSettingsScene = new Scenes.BaseScene<BotContext>(SCENES.FOOD_AMOUNT_SETTINGS);
-
-// Вход в сцену настройки количества корма
-foodAmountSettingsScene.enter(async (ctx) => {
-  try {
-    const currentAmount = await ctx.database.getSetting('default_food_amount') || '12';
-    
-    const message = `⚖️ Настройка количества корма\n\n` +
-      `Текущее количество: ${currentAmount} граммов\n\n` +
-      `Введите новое количество корма (от 1 до 200 граммов):\n\n` +
-      `Примеры:\n` +
-      `• 12\n` +
-      `• 25\n` +
-      `• 50\n` +
-      `• 100`;
-
-    ctx.reply(message, Markup.keyboard([
-      ['🍽️ корм', '🏠 Главный экран']
-    ]).resize());
-
-  } catch (error) {
-    console.error('Ошибка получения количества корма:', error);
-    ctx.reply('❌ Ошибка получения данных');
-  }
-});
-
-// Обработка ввода количества
-foodAmountSettingsScene.on('text', async (ctx) => {
+// Обработка ввода настроек корма
+foodSettingsScene.on('text', async (ctx) => {
   const text = ctx.message.text;
 
-  // Проверка на кнопки навигации
-  if (text.includes('🍽️ корм')) {
-    ctx.scene.enter(SCENES.FOOD_SETTINGS);
-    return;
-  }
-
-  if (text.includes('🏠 Главный экран')) {
+  // Проверка на кнопку "На главную"
+  if (text.includes('🏠 На главную')) {
     ctx.scene.enter(SCENES.MAIN);
     return;
   }
 
-  // Парсинг количества
-  const amount = parseInt(text.trim());
-
-  if (isNaN(amount)) {
-    ctx.reply(
-      '❌ Введите число от 1 до 200',
-      Markup.keyboard([
-        ['🍽️ корм', '🏠 Главный экран']
-      ]).resize()
-    );
-    return;
-  }
-
-  if (amount < 1 || amount > 200) {
-    ctx.reply(
-      '❌ Количество должно быть от 1 до 200 граммов',
-      Markup.keyboard([
-        ['🍽️ корм', '🏠 Главный экран']
-      ]).resize()
-    );
-    return;
-  }
-
   try {
-    await ctx.database.setSetting('default_food_amount', amount.toString());
+    if (!globalDatabase) {
+      ctx.reply('Ошибка: база данных не инициализирована. Попробуйте перезапустить бота командой /start');
+      return;
+    }
+
+    // Парсинг введенных настроек
+    const parsed = FeedingParser.parseDetails(text);
+
+    if (!parsed.isValid) {
+      ctx.reply(
+        `❌ Ошибка: ${parsed.error}\n\n` +
+        `Попробуйте еще раз или используйте примеры выше.`,
+        Markup.keyboard([
+          ['🏠 На главную']
+        ]).resize()
+      );
+      return;
+    }
+
+    // Сохранение новых настроек
+    let updatedSettings = [];
     
-    const user = await ctx.database.getUserByTelegramId(ctx.from!.id);
+    if (parsed.amount !== undefined) {
+      await globalDatabase.setSetting('default_food_amount', parsed.amount.toString());
+      updatedSettings.push(`количество: ${parsed.amount} граммов`);
+    }
     
-    const message = `✅ Количество корма изменено на ${amount} граммов\n\n` +
-      `Изменения применятся к следующим кормлениям.\n` +
+    if (parsed.foodType !== undefined) {
+      await globalDatabase.setSetting('default_food_type', parsed.foodType);
+      const typeText = parsed.foodType === 'dry' ? 'сухой' : 'влажный';
+      updatedSettings.push(`тип: ${typeText}`);
+    }
+
+    const user = await globalDatabase.getUserByTelegramId(ctx.from!.id);
+    
+    const message = `✅ Настройки корма обновлены!\n\n` +
+      `Новые настройки: ${updatedSettings.join(', ')}\n\n` +
+      `Изменения вступят в силу после следующего кормления.\n` +
       `Инициатор: ${user?.username || 'Пользователь'}`;
 
     // Уведомление всех пользователей об изменении
-    const allUsers = await ctx.database.getAllUsers();
+    const allUsers = await globalDatabase.getAllUsers();
     for (const u of allUsers) {
       if (u.notificationsEnabled) {
         try {
-          await ctx.telegram.sendMessage(u.telegramId, `⚖️ ${message}`);
+          await ctx.telegram.sendMessage(u.telegramId, `🍽️ ${message}`);
         } catch (error) {
           console.error(`Ошибка отправки уведомления пользователю ${u.telegramId}:`, error);
         }
       }
     }
 
-    console.log(`Количество корма изменено на ${amount}г пользователем ${user?.username}`);
+    console.log(`Настройки корма изменены: ${updatedSettings.join(', ')} пользователем ${user?.username}`);
     
-    // Возврат к настройкам корма
-    setTimeout(() => {
-      ctx.scene.enter(SCENES.FOOD_SETTINGS);
-    }, 1500);
+    ctx.reply(
+      message,
+      Markup.keyboard([
+        ['⚙️ Настройки'],
+        ['🏠 На главную']
+      ]).resize()
+    );
 
   } catch (error) {
-    console.error('Ошибка сохранения количества корма:', error);
-    ctx.reply('❌ Ошибка сохранения настроек');
+    console.error('Ошибка сохранения настроек корма:', error);
+    ctx.reply(
+      '❌ Ошибка сохранения настроек. Попробуйте еще раз.',
+      Markup.keyboard([
+        ['🏠 На главную']
+      ]).resize()
+    );
   }
 });
 ```
 
-### 4. Обновить `src/utils/constants.ts`
+### 2. Обновить `src/utils/constants.ts`
 ```typescript
 // ... предыдущий код ...
 
 // Названия сцен
 export const SCENES = {
   MAIN: 'main',
-  FEEDING_SUCCESS: 'feeding_success',
+  FEEDING_DETAILS: 'feeding_details',
   SETTINGS: 'settings',
   HISTORY: 'history',
-  TODAY_HISTORY: 'today_history',
   INTERVAL_SETTINGS: 'interval_settings',
+  TODAY_HISTORY: 'today_history',
   FOOD_SETTINGS: 'food_settings',
-  FOOD_TYPE_SETTINGS: 'food_type_settings',
-  FOOD_AMOUNT_SETTINGS: 'food_amount_settings'
+  NOTIFICATION_SETTINGS: 'notification_settings',
+  FULL_HISTORY: 'full_history',
+  EXPORT: 'export',
+  SCHEDULE_FEEDING: 'schedule_feeding',
+  SCHEDULED_LIST: 'scheduled_list',
+  OTHER_ACTIONS: 'other_actions'
 };
 ```
 
-### 5. Обновить `src/scenes/settings.ts`
+### 3. Обновить `src/scenes/settings.ts`
 ```typescript
 import { Scenes } from 'telegraf';
 import { BotContext } from '../types';
@@ -348,13 +198,9 @@ settingsScene.hears(/⏰ Настройки интервала кормлени�
   ctx.scene.enter(SCENES.INTERVAL_SETTINGS);
 });
 
-// Заглушка для настроек уведомлений
+// Обработка кнопки "Настройки уведомлений"
 settingsScene.hears(/🔔 Настройки уведомлений/, (ctx) => {
-  ctx.reply(
-    '🔔 Настройки уведомлений будут добавлены в Этапе 8.\n\n' +
-    'Сейчас уведомления включены для всех.',
-    getSettingsKeyboard()
-  );
+  ctx.scene.enter(SCENES.NOTIFICATION_SETTINGS);
 });
 
 // Обработка кнопки "Выйти на главный экран"
@@ -371,7 +217,7 @@ settingsScene.on('text', (ctx) => {
 });
 ```
 
-### 6. Обновить `src/handlers/main.ts`
+### 4. Обновить `src/handlers/main.ts`
 ```typescript
 import { Context } from 'telegraf';
 import { User, Feeding } from '../types';
@@ -487,12 +333,10 @@ export class MainHandler {
 }
 ```
 
-### 7. Обновить `src/bot.ts` (добавить новые сцены)
+### 5. Обновить `src/bot.ts` (удалить ссылки на удаленные сцены)
 ```typescript
 // ... импорты ...
-import { foodSettingsScene } from './scenes/food-settings';
-import { foodTypeSettingsScene } from './scenes/food-type-settings';
-import { foodAmountSettingsScene } from './scenes/food-amount-settings';
+import { foodSettingsScene, setGlobalDatabaseForFoodSettings } from './scenes/food-settings';
 
 // ... остальной код ...
 
@@ -505,8 +349,12 @@ const stage = new Scenes.Stage([
   todayHistoryScene,
   intervalSettingsScene,
   foodSettingsScene,
-  foodTypeSettingsScene,
-  foodAmountSettingsScene
+  notificationSettingsScene,
+  fullHistoryScene,
+  exportScene,
+  scheduleFeedingScene,
+  scheduledListScene,
+  otherActionsScene
 ]);
 
 // ... остальной код остается тем же ...
@@ -519,24 +367,24 @@ const stage = new Scenes.Stage([
 1. **Доступ к настройкам корма**:
    - Главный экран → Настройки → корм
    - Проверить отображение текущих настроек
+   - Проверить наличие поясняющего текста с примерами
 
 2. **Изменение типа корма**:
-   - корм → Тип корма → Сухой/Влажный
+   - Ввести "сухого 25" в экране настроек корма
    - Проверить уведомление всем пользователям
    - Проверить сохранение в БД
 
 3. **Изменение количества корма**:
-   - корм → Количество корма
-   - Ввести валидное значение (например, 25)
+   - Ввести "30 грамм влажного" в экране настроек корма
    - Проверить уведомление и сохранение
 
-4. **Валидация количества**:
-   - Ввести 0 → должна быть ошибка
-   - Ввести 250 → должна быть ошибка
+4. **Валидация ввода**:
+   - Ввести "0" → должна быть ошибка
+   - Ввести "501" → должна быть ошибка
    - Ввести "abc" → должна быть ошибка
 
 5. **Применение настроек**:
-   - Изменить тип на "Влажный" и количество на 30г
+   - Изменить тип на "влажный" и количество на 30г
    - Нажать "Я покормил"
    - Проверить, что в уведомлении указан влажный корм 30г
 

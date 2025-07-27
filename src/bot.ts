@@ -12,8 +12,6 @@ import { settingsScene } from './scenes/settings';
 import { historyScene } from './scenes/history';
 import { intervalSettingsScene } from './scenes/interval-settings';
 import { foodSettingsScene, setGlobalDatabaseForFoodSettings } from './scenes/food-settings';
-import { foodTypeSettingsScene, setGlobalDatabaseForFoodTypeSettings } from './scenes/food-type-settings';
-import { foodAmountSettingsScene, setGlobalDatabaseForFoodAmountSettings } from './scenes/food-amount-settings';
 import { feedingDetailsScene, setGlobalDatabaseForFeedingDetails } from './scenes/feeding-details';
 import { notificationSettingsScene, setGlobalDatabaseForNotificationSettings } from './scenes/notification-settings';
 import { exportScene } from './scenes/export';
@@ -86,8 +84,6 @@ setGlobalDatabaseForMain(database);
 setGlobalServicesForOtherActions(timerService, database, getOrCreateUser);
 setGlobalDatabaseForTodayHistory(database);
 setGlobalDatabaseForFoodSettings(database);
-setGlobalDatabaseForFoodTypeSettings(database);
-setGlobalDatabaseForFoodAmountSettings(database);
 setGlobalDatabaseForFeedingDetails(database);
 setGlobalDatabaseForNotificationSettings(database);
 setGlobalSchedulerForScheduleFeeding(schedulerService);
@@ -108,8 +104,6 @@ const stage = new Scenes.Stage<BotContext>([
   intervalSettingsScene,
   todayHistoryScene,
   foodSettingsScene,
-  foodTypeSettingsScene,
-  foodAmountSettingsScene,
   notificationSettingsScene,
   fullHistoryScene,
   exportScene,

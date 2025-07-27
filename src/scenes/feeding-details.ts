@@ -34,7 +34,7 @@ feedingDetailsScene.enter(async (ctx) => {
     `Или опишите причину, если не кормили.`;
 
   ctx.reply(message, Markup.keyboard([
-    ['🏠 Выйти на главный экран']
+    ['🏠 На главную']
   ]).resize());
 });
 
@@ -42,8 +42,8 @@ feedingDetailsScene.enter(async (ctx) => {
 feedingDetailsScene.on('text', async (ctx) => {
   const text = ctx.message.text;
 
-  // Проверка на кнопку "Выйти на главный экран"
-  if (text.includes('🏠 Выйти на главный экран')) {
+  // Проверка на кнопку "На главную"
+  if (text.includes('🏠 На главную')) {
     ctx.scene.enter(SCENES.MAIN);
     return;
   }
@@ -66,7 +66,7 @@ feedingDetailsScene.on('text', async (ctx) => {
     if (!parsed.isValid && parsed.error) {
       ctx.reply(
         `❌ Ошибка: ${parsed.error}\n\nПопробуйте еще раз или используйте примеры выше.`,
-        Markup.keyboard([['🏠 Выйти на главный экран']]).resize()
+        Markup.keyboard([['🏠 На главную']]).resize()
       );
       return;
     }
@@ -114,7 +114,7 @@ feedingDetailsScene.on('text', async (ctx) => {
     console.error('Ошибка обновления деталей кормления:', error);
     ctx.reply(
       '❌ Произошла ошибка при сохранении деталей. Попробуйте еще раз.',
-      Markup.keyboard([['🏠 Выйти на главный экран']]).resize()
+      Markup.keyboard([['🏠 На главную']]).resize()
     );
   }
 }); 

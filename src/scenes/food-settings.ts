@@ -1,6 +1,7 @@
 import { Scenes, Markup } from 'telegraf';
 import { BotContext } from '../types';
 import { DatabaseService } from '../services/database';
+import { FeedingParser } from '../services/feeding-parser';
 import { SCENES } from '../utils/constants';
 
 export const foodSettingsScene = new Scenes.BaseScene<BotContext>(SCENES.FOOD_SETTINGS);
@@ -31,44 +32,112 @@ foodSettingsScene.enter(async (ctx) => {
       `Текущие настройки:\n` +
       `• Тип корма: ${typeText}\n` +
       `• Количество: ${currentAmount} граммов\n\n` +
-      `Выберите что изменить:`;
+      `Введите новые настройки корма:\n\n` +
+      `Примеры форматов:\n` +
+      FeedingParser.getExamples().map(example => `• ${example}`).join('\n');
 
     ctx.reply(message, Markup.keyboard([
-      ['🥘 Тип корма', '⚖️ Количество корма'],
-      ['🏠 Выйти на главный экран']
+      ['🏠 На главную']
     ]).resize());
 
   } catch (error) {
     console.error('Ошибка получения настроек корма:', error);
     ctx.reply(
       '❌ Ошибка получения настроек. Попробуйте еще раз.',
-      Markup.keyboard([['🏠 Выйти на главный экран']]).resize()
+      Markup.keyboard([['🏠 На главную']]).resize()
     );
   }
 });
 
-// Обработка кнопки "Тип корма"
-foodSettingsScene.hears(/🥘 Тип корма/, (ctx) => {
-  ctx.scene.enter(SCENES.FOOD_TYPE_SETTINGS);
-});
+// Обработка ввода настроек корма
+foodSettingsScene.on('text', async (ctx) => {
+  const text = ctx.message.text;
 
-// Обработка кнопки "Количество корма"
-foodSettingsScene.hears(/⚖️ Количество корма/, (ctx) => {
-  ctx.scene.enter(SCENES.FOOD_AMOUNT_SETTINGS);
-});
+  // Проверка на кнопку "На главную"
+  if (text.includes('🏠 На главную')) {
+    ctx.scene.enter(SCENES.MAIN);
+    return;
+  }
+  
+  // Проверка на кнопку "Назад"
+  if (text.includes('⬅️ Назад')) {
+    ctx.scene.enter(SCENES.SETTINGS);
+    return;
+  }
 
-// Обработка кнопки "Выйти на главный экран"
-foodSettingsScene.hears(/🏠 Выйти на главный экран/, (ctx) => {
-  ctx.scene.enter(SCENES.MAIN);
-});
+  try {
+    if (!globalDatabase) {
+      ctx.reply('Ошибка: база данных не инициализирована. Попробуйте перезапустить бота командой /start');
+      return;
+    }
 
-// Обработка неизвестных команд
-foodSettingsScene.on('text', (ctx) => {
-  ctx.reply(
-    'Используйте кнопки меню для навигации.',
-    Markup.keyboard([
-      ['🥘 Тип корма', '⚖️ Количество корма'],
-      ['🏠 Выйти на главный экран']
-    ]).resize()
-  );
-}); 
+    // Парсинг введенных настроек
+    const parsed = FeedingParser.parseDetails(text);
+
+    if (!parsed.isValid) {
+      ctx.reply(
+        `❌ Ошибка: ${parsed.error}\n\n` +
+        `Попробуйте еще раз или используйте примеры выше.`,
+        Markup.keyboard([
+          ['🏠 На главную']
+        ]).resize()
+      );
+      return;
+    }
+
+    // Сохранение новых настроек
+    let updatedSettings = [];
+    
+    if (parsed.amount !== undefined) {
+      await globalDatabase.setSetting('default_food_amount', parsed.amount.toString());
+      updatedSettings.push(`количество: ${parsed.amount} граммов`);
+    }
+    
+    if (parsed.foodType !== undefined) {
+      await globalDatabase.setSetting('default_food_type', parsed.foodType);
+      const typeText = parsed.foodType === 'dry' ? 'сухой' : 'влажный';
+      updatedSettings.push(`тип: ${typeText}`);
+    }
+
+    const user = await globalDatabase.getUserByTelegramId(ctx.from!.id);
+    
+    const message = `✅ Настройки корма обновлены!\n\n` +
+      `Новые настройки: ${updatedSettings.join(', ')}\n\n` +
+      `Изменения вступят в силу после следующего кормления.\n` +
+      `Инициатор: ${user?.username || 'Пользователь'}`;
+
+    // Уведомление других пользователей об изменении
+    const allUsers = await globalDatabase.getAllUsers();
+    for (const u of allUsers) {
+      // Не отправляем уведомление пользователю, который сделал изменения
+      if (u.telegramId !== ctx.from!.id && u.notificationsEnabled) {
+        try {
+          await ctx.telegram.sendMessage(u.telegramId, `🍽️ ${message}`);
+        } catch (error) {
+          console.error(`Ошибка отправки уведомления пользователю ${u.telegramId}:`, error);
+        }
+      }
+    }
+
+    console.log(`Настройки корма изменены: ${updatedSettings.join(', ')} пользователем ${user?.username}`);
+    
+    // Отправляем подтверждение только текущему пользователю
+    ctx.reply(
+      `✅ Настройки корма обновлены!\n\n` +
+      `Новые настройки: ${updatedSettings.join(', ')}\n\n` +
+      `Изменения вступят в силу после следующего кормления.`,
+      Markup.keyboard([
+        ['⬅️ Назад', '🏠 На главную']
+      ]).resize()
+    );
+
+  } catch (error) {
+    console.error('Ошибка сохранения настроек корма:', error);
+    ctx.reply(
+      '❌ Ошибка сохранения настроек. Попробуйте еще раз.',
+      Markup.keyboard([
+        ['🏠 На главную']
+      ]).resize()
+    );
+  }
+});

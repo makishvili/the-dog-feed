@@ -33,7 +33,7 @@ intervalSettingsScene.enter((ctx) => {
     TimeParser.getExamples().map(example => `• ${example}`).join('\n');
 
   ctx.reply(message, Markup.keyboard([
-    ['🏠 Выйти на главный экран']
+    ['🏠 На главную']
   ]).resize());
 });
 
@@ -41,9 +41,15 @@ intervalSettingsScene.enter((ctx) => {
 intervalSettingsScene.on('text', (ctx) => {
   const text = ctx.message.text;
 
-  // Проверка на кнопку "Выйти на главный экран"
-  if (text.includes('🏠 Выйти на главный экран')) {
+  // Проверка на кнопку "На главную"
+  if (text.includes('🏠 На главную')) {
     ctx.scene.enter(SCENES.MAIN);
+    return;
+  }
+  
+  // Проверка на кнопку "Назад"
+  if (text.includes('⬅️ Назад')) {
+    ctx.scene.enter(SCENES.SETTINGS);
     return;
   }
 
@@ -55,7 +61,7 @@ intervalSettingsScene.on('text', (ctx) => {
       `❌ Ошибка: ${parsed.error}\n\n` +
       `Попробуйте еще раз или используйте примеры выше.`,
       Markup.keyboard([
-        ['🏠 Выйти на главный экран']
+        ['🏠 На главную']
       ]).resize()
     );
     return;
@@ -82,8 +88,7 @@ intervalSettingsScene.on('text', (ctx) => {
     `Новый интервал: ${formattedInterval}\n\n` +
     `Изменения вступят в силу после следующего кормления.`,
     Markup.keyboard([
-      ['⚙️ Настройки'],
-      ['🏠 Выйти на главный экран']
+      ['⬅️ Назад', '🏠 На главную']
     ]).resize()
   );
 

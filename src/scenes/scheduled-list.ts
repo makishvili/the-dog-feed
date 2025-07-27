@@ -90,7 +90,7 @@ async function showScheduledList(ctx: BotContext) {
     // Стандартные кнопки
     buttons.push(['📅 Создать новое кормление']);
     buttons.push(['❌ Отменить все']);
-    buttons.push(['🏠 Выйти на главный экран']);
+    buttons.push(['🏠 На главную']);
     
     const keyboard = {
       keyboard: buttons,
@@ -231,8 +231,8 @@ scheduledListScene.hears(/❌ Отменить все/, async (ctx) => {
   }
 });
 
-// Обработка кнопки "Выйти на главный экран"
-scheduledListScene.hears(/🏠 Выйти на главный экран/, (ctx) => {
+// Обработка кнопки "На главную"
+scheduledListScene.hears(/🏠 На главную/, (ctx) => {
   ctx.scene.enter(SCENES.MAIN);
 });
 

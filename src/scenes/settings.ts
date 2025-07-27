@@ -2,7 +2,6 @@ import { Scenes } from 'telegraf';
 import { BotContext } from '../types';
 import { getSettingsKeyboard } from '../utils/keyboards';
 import { MESSAGES, SCENES } from '../utils/constants';
-import { TimeParser } from '../services/parser';
 
 export const settingsScene = new Scenes.BaseScene<BotContext>(SCENES.SETTINGS);
 
@@ -25,8 +24,8 @@ settingsScene.hears(/🔔 уведомления/, (ctx) => {
   ctx.scene.enter(SCENES.NOTIFICATION_SETTINGS);
 });
 
-// Обработка кнопки "Выйти на главный экран"
-settingsScene.hears(/🏠 Выйти на главный экран/, (ctx) => {
+// Обработка кнопки "На главную"
+settingsScene.hears(/🏠 На главную/, (ctx) => {
   ctx.scene.enter(SCENES.MAIN);
 });
 

@@ -210,8 +210,8 @@ scheduleFeedingScene.hears(/❌ Отменить ввод/, (ctx) => {
   ctx.scene.enter(SCENES.MAIN);
 });
 
-// Обработка кнопки "Выйти на главный экран"
-scheduleFeedingScene.hears(/🏠 Выйти на главный экран/, (ctx) => {
+// Обработка кнопки "На главную"
+scheduleFeedingScene.hears(/🏠 На главную/, (ctx) => {
   ctx.scene.enter(SCENES.MAIN);
 });
 

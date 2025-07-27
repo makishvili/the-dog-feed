@@ -26,7 +26,7 @@ export function getMainKeyboard(showFeedingDetailsButton = false) {
 export function getSettingsKeyboard() {
   return Markup.keyboard([
     ['🍽️ корм', '⏰ интервал', '🔔 уведомления'],
-    ['🏠 Выйти на главный экран']
+    ['🏠 На главную']
   ]).resize();
 }
 
@@ -34,14 +34,14 @@ export function getSettingsKeyboard() {
 export function getHistoryKeyboard() {
   return Markup.keyboard([
     ['📅 Сегодня', '📋 Все кормления'],
-    ['🏠 Выйти на главный экран']
+    ['🏠 На главную']
   ]).resize();
 }
 
-// Универсальная кнопка "Выйти на главный экран"
+// Универсальная кнопка "На главную"
 export function getBackKeyboard() {
   return Markup.keyboard([
-    ['🏠 Выйти на главный экран']
+    ['🏠 На главную']
   ]).resize();
 }
 
@@ -50,7 +50,7 @@ export function getScheduleManagementKeyboard() {
   return Markup.keyboard([
     ['📅 Запланировать кормление'],
     ['📋 Просмотреть запланированные', '❌ Отменить запланированные'],
-    ['🏠 Выйти на главный экран']
+    ['🏠 На главную']
   ]).resize();
 }
 
@@ -58,7 +58,7 @@ export function getScheduleManagementKeyboard() {
 export function getScheduleFeedingKeyboard() {
   return Markup.keyboard([
     ['❌ Отменить ввод'],
-    ['🏠 Выйти на главный экран']
+    ['🏠 На главную']
   ]).resize();
 }
 
@@ -67,7 +67,7 @@ export function getScheduledListKeyboard() {
   return Markup.keyboard([
     ['📅 Создать новое кормление'],
     ['❌ Отменить все'],
-    ['🏠 Выйти на главный экран']
+    ['🏠 На главную']
   ]).resize();
 }
 
@@ -75,8 +75,8 @@ export function getScheduledListKeyboard() {
 export function getScheduledItemKeyboard(scheduleId: number) {
   return Markup.keyboard([
     [`❌ Отменить кормление ${scheduleId}`],
-    ['📋 Выйти на главный экран к списку'],
-    ['🏠 Выйти на главный экран']
+    ['📋 На главную к списку'],
+    ['🏠 На главную']
   ]).resize();
 }
 
@@ -84,8 +84,8 @@ export function getScheduledItemKeyboard(scheduleId: number) {
 export function getFullHistoryKeyboard() {
   return Markup.keyboard([
     ['📤 Экспорт истории', '🔍 Фильтры'],
-    ['◀️ Выйти на главный экран', '▶️ Далее'],
-    ['🏠 Выйти на главный экран']
+    ['◀️ На главную', '▶️ Далее'],
+    ['🏠 На главную']
   ]).resize();
 }
 
@@ -94,7 +94,7 @@ export function getExportKeyboard() {
   return Markup.keyboard([
     ['📋 CSV формат', '🌐 HTML формат'],
     ['📅 За неделю', '🗓️ За месяц', '📊 Все время'],
-    ['🏠 Выйти на главный экран']
+    ['🏠 На главную']
   ]).resize();
 }
 
@@ -118,7 +118,7 @@ export function getPaginationKeyboard(currentPage: number, totalPages: number, h
   
   // Дополнительные действия
   buttons.push(['📤 Экспорт истории']);
-  buttons.push(['🏠 Выйти на главный экран']);
+  buttons.push(['🏠 На главную']);
   
   return Markup.keyboard(buttons).resize();
 }
@@ -127,8 +127,8 @@ export function getPaginationKeyboard(currentPage: number, totalPages: number, h
 export function getOtherActionsKeyboard() {
   return Markup.keyboard([
     ['⏹️ Завершить кормления на сегодня'],
-    ['📅 Управление расписанием', '📋 История кормлений'],
+    ['📅 Внеочередные кормления', '📋 История кормлений'],
     ['⚙️ Настройки'],
-    ['🏠 Выйти на главный экран']
+    ['🏠 На главную']
   ]).resize();
 }

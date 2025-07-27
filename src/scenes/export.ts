@@ -131,8 +131,8 @@ async function processExport(ctx: BotContext, period: 'week' | 'month' | 'all') 
   }
 }
 
-// Обработка кнопки "Выйти на главный экран"
-exportScene.hears(/🏠 Выйти на главный экран/, (ctx) => {
+// Обработка кнопки "На главную"
+exportScene.hears(/🏠 На главную/, (ctx) => {
   ctx.scene.enter(SCENES.MAIN);
 });
 

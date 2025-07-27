@@ -65,8 +65,6 @@ export const SCENES = {
   INTERVAL_SETTINGS: 'interval_settings',
   TODAY_HISTORY: 'today_history',
   FOOD_SETTINGS: 'food_settings',
-  FOOD_TYPE_SETTINGS: 'food_type_settings',
-  FOOD_AMOUNT_SETTINGS: 'food_amount_settings',
   NOTIFICATION_SETTINGS: 'notification_settings',
   FULL_HISTORY: 'full_history',
   EXPORT: 'export',
