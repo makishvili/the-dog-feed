@@ -3,6 +3,7 @@ import { BotContext } from '../types';
 import { DEFAULT_FEEDING_INTERVAL_MINUTES } from '../utils/constants';
 import { NotificationService } from './notifications';
 import { DatabaseService } from './database';
+import { getMainKeyboard } from '../utils/keyboards';
 
 export interface TimerState {
     nextFeedingTime: Date | null;
@@ -90,7 +91,27 @@ export class TimerService {
         if (!this.timerState.isActive) return;
 
         const message = '🔔 Пора покормить собаку!';
-        await this.notificationService.sendToAll(message);
+        
+        // Получаем всех пользователей из базы данных для уведомлений
+        const allUsers = await this.database.getAllUsers();
+        for (const user of allUsers) {
+            if (user.notificationsEnabled) {
+                try {
+                    // Отправляем сообщение с клавиатурой главного экрана
+                    // Клавиатура показывает кнопку "Собачка поел" и скрывает кнопку "Уточнить детали кормления"
+                    await this.bot.telegram.sendMessage(
+                        user.telegramId,
+                        message,
+                        getMainKeyboard(false) // false означает, что кнопка "Уточнить детали кормления" не показывается
+                    );
+                } catch (error) {
+                    console.error(
+                        `Ошибка отправки сообщения пользователю ${user.telegramId}:`,
+                        error
+                    );
+                }
+            }
+        }
 
         console.log('Отправлено напоминание о кормлении');
 
@@ -107,7 +128,27 @@ export class TimerService {
             }
 
             const message = '🔔 Напоминание: собаку все еще нужно покормить!';
-            await this.notificationService.sendToAll(message);
+            
+            // Получаем всех пользователей из базы данных для уведомлений
+            const allUsers = await this.database.getAllUsers();
+            for (const user of allUsers) {
+                if (user.notificationsEnabled) {
+                    try {
+                        // Отправляем сообщение с клавиатурой главного экрана
+                        // Клавиатура показывает кнопку "Собачка поел" и скрывает кнопку "Уточнить детали кормления"
+                        await this.bot.telegram.sendMessage(
+                            user.telegramId,
+                            message,
+                            getMainKeyboard(false) // false означает, что кнопка "Уточнить детали кормления" не показывается
+                        );
+                    } catch (error) {
+                        console.error(
+                            `Ошибка отправки сообщения пользователю ${user.telegramId}:`,
+                            error
+                        );
+                    }
+                }
+            }
 
             console.log('Отправлено повторное напоминание');
         }, this.REMINDER_INTERVAL);
