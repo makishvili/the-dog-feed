@@ -25,6 +25,7 @@
         "test:scenes:watch": "jest --testPathPattern=tests/scenes --watch",
         "test:e2e:watch": "jest --testPathPattern=tests/e2e --watch",
         "clear-db": "ts-node scripts/maintenance/clear-database.ts",
+        "backup-db": "ts-node scripts/maintenance/backup-database.ts",
         "yc:deploy": "npm run build && pm2 start ecosystem.yandex.config.js && pm2 save",
         "yc:update": "git pull && npm install && npm run build && pm2 restart dog-feeding-bot",
         "yc:logs": "pm2 logs dog-feeding-bot",
