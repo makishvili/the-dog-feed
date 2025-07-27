@@ -26,7 +26,7 @@ intervalSettingsScene.enter((ctx) => {
   
   const formattedInterval = TimeParser.formatInterval(currentInterval);
   
-  const message = `⏰ Настройки интервала кормления\n\n` +
+  const message = `⏰ интервал\n\n` +
     `Текущий интервал: ${formattedInterval}\n\n` +
     `Введите новый интервал (от 1 минуты до 24 часов):\n\n` +
     `Примеры форматов:\n` +

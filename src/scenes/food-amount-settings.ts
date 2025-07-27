@@ -33,7 +33,7 @@ foodAmountSettingsScene.enter(async (ctx) => {
       `• 100`;
 
     ctx.reply(message, Markup.keyboard([
-      ['🍽️ Настройки корма', '🏠 Главный экран']
+      ['🍽️ корм', '🏠 Главный экран']
     ]).resize());
 
   } catch (error) {
@@ -47,7 +47,7 @@ foodAmountSettingsScene.on('text', async (ctx) => {
   const text = ctx.message.text;
 
   // Проверка на кнопки навигации
-  if (text.includes('🍽️ Настройки корма')) {
+  if (text.includes('🍽️ корм')) {
     ctx.scene.enter(SCENES.FOOD_SETTINGS);
     return;
   }
@@ -64,7 +64,7 @@ foodAmountSettingsScene.on('text', async (ctx) => {
     ctx.reply(
       '❌ Введите число от 1 до 200',
       Markup.keyboard([
-        ['🍽️ Настройки корма', '🏠 Главный экран']
+        ['🍽️ корм', '🏠 Главный экран']
       ]).resize()
     );
     return;
@@ -74,7 +74,7 @@ foodAmountSettingsScene.on('text', async (ctx) => {
     ctx.reply(
       '❌ Количество должно быть от 1 до 200 граммов',
       Markup.keyboard([
-        ['🍽️ Настройки корма', '🏠 Главный экран']
+        ['🍽️ корм', '🏠 Главный экран']
       ]).resize()
     );
     return;

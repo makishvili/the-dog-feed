@@ -11,17 +11,17 @@ settingsScene.enter((ctx) => {
   ctx.reply(MESSAGES.SETTINGS_PLACEHOLDER, getSettingsKeyboard());
 });
 
-// Обработка кнопки "Настройки корма"
-settingsScene.hears(/🍽️ Настройки корма/, (ctx) => {
+// Обработка кнопки "корм"
+settingsScene.hears(/🍽️ корм/, (ctx) => {
   ctx.scene.enter(SCENES.FOOD_SETTINGS);
 });
 
-// Обработка кнопки "Настройки интервала кормления"
-settingsScene.hears(/⏰ Настройки интервала кормления/, (ctx) => {
+// Обработка кнопки "интервал"
+settingsScene.hears(/⏰ интервал/, (ctx) => {
   ctx.scene.enter(SCENES.INTERVAL_SETTINGS);
 });
 
-settingsScene.hears(/🔔 Настройки уведомлений/, (ctx) => {
+settingsScene.hears(/🔔 уведомления/, (ctx) => {
   ctx.scene.enter(SCENES.NOTIFICATION_SETTINGS);
 });
 

@@ -27,7 +27,7 @@ foodSettingsScene.enter(async (ctx) => {
     
     const typeText = currentType === 'dry' ? 'Сухой' : 'Влажный';
     
-    const message = `🍽️ Настройки корма\n\n` +
+    const message = `🍽️ корм\n\n` +
       `Текущие настройки:\n` +
       `• Тип корма: ${typeText}\n` +
       `• Количество: ${currentAmount} граммов\n\n` +

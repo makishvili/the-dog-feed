@@ -30,7 +30,7 @@ foodTypeSettingsScene.enter(async (ctx) => {
 
     ctx.reply(message, Markup.keyboard([
       ['🌾 Сухой', '🥫 Влажный'],
-      ['🍽️ Настройки корма', '🏠 Главный экран']
+      ['🍽️ корм', '🏠 Главный экран']
     ]).resize());
 
   } catch (error) {
@@ -121,8 +121,8 @@ foodTypeSettingsScene.hears(/🥫 Влажный/, async (ctx) => {
   }
 });
 
-// Обработка кнопки "Настройки корма"
-foodTypeSettingsScene.hears(/🍽️ Настройки корма/, (ctx) => {
+// Обработка кнопки "корм"
+foodTypeSettingsScene.hears(/🍽️ корм/, (ctx) => {
   ctx.scene.enter(SCENES.FOOD_SETTINGS);
 });
 
@@ -137,7 +137,7 @@ foodTypeSettingsScene.on('text', (ctx) => {
     'Выберите тип корма из предложенных вариантов.',
     Markup.keyboard([
       ['🌾 Сухой', '🥫 Влажный'],
-      ['🍽️ Настройки корма', '🏠 Главный экран']
+      ['🍽️ корм', '🏠 Главный экран']
     ]).resize()
   );
 }); 

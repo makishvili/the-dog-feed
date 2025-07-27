@@ -172,7 +172,7 @@ stateDiagram-v2
     MainScene --> HistoryScene: История
     MainScene --> FeedingDetailsScene: Я покормил
     
-    SettingsScene --> FoodSettingsScene: Настройки корма
+    SettingsScene --> FoodSettingsScene: корм
     SettingsScene --> IntervalSettingsScene: Интервал
     SettingsScene --> NotificationSettingsScene: Уведомления
     

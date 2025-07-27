@@ -291,8 +291,8 @@ settingsScene.enter((ctx) => {
   ctx.reply(MESSAGES.SETTINGS_PLACEHOLDER, getSettingsKeyboard());
 });
 
-// Обработка кнопки "Настройки корма"
-settingsScene.hears(/🍽️ Настройки корма/, (ctx) => {
+// Обработка кнопки "корм"
+settingsScene.hears(/🍽️ корм/, (ctx) => {
   ctx.scene.enter(SCENES.FOOD_SETTINGS);
 });
 

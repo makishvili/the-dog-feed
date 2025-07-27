@@ -31,7 +31,7 @@ notificationSettingsScene.enter(async (ctx) => {
     const statusText = user.notificationsEnabled ? 'Включены' : 'Выключены';
     const statusEmoji = user.notificationsEnabled ? '🔔' : '🔕';
     
-    const message = `${statusEmoji} Настройки уведомлений\n\n` +
+    const message = `${statusEmoji} уведомления\n\n` +
       `Текущий статус: ${statusText}\n\n` +
       `Уведомления включают:\n` +
       `• Сообщения о кормлении собаки\n` +
