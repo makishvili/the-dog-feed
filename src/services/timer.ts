@@ -3,6 +3,7 @@ import { BotContext } from '../types';
 import { DEFAULT_FEEDING_INTERVAL_MINUTES } from '../utils/constants';
 import { NotificationService } from './notifications';
 import { DatabaseService } from './database';
+import { toMoscowTime } from '../utils/time-utils';
 
 export interface TimerState {
   nextFeedingTime: Date | null;
@@ -51,7 +52,7 @@ export class TimerService {
     this.clearAllTimers();
     
     const intervalMs = this.timerState.currentIntervalMinutes * 60 * 1000;
-    const nextTime = new Date(Date.now() + intervalMs);
+    const nextTime = new Date(toMoscowTime(new Date()).getTime() + intervalMs);
     this.timerState.nextFeedingTime = nextTime;
     this.timerState.isActive = true;
     
@@ -68,7 +69,7 @@ export class TimerService {
     
     const intervalMinutes = customIntervalMinutes || this.timerState.currentIntervalMinutes;
     const intervalMs = intervalMinutes * 60 * 1000;
-    const nextTime = new Date(Date.now() + intervalMs);
+    const nextTime = new Date(toMoscowTime(new Date()).getTime() + intervalMs);
     
     this.timerState.nextFeedingTime = nextTime;
     this.timerState.isActive = true;
