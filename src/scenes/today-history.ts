@@ -45,7 +45,7 @@ todayHistoryScene.enter(async (ctx) => {
     const usersMap = new Map<number, DatabaseUser>();
     allUsers.forEach(user => usersMap.set(user.id, user));
 
-    let message = '📅 История кормлений за сегодня\n\n';
+    let message = '📅 *История кормлений за сегодня*\n\n';
 
     // Получаем запланированные кормления
     if (globalSchedulerService) {
@@ -116,7 +116,7 @@ todayHistoryScene.enter(async (ctx) => {
         
         // Форматируем запись в соответствии с запросом пользователя
         const foodTypeText = feeding.foodType === 'dry' ? 'сухого' : 'мокрого';
-        message += `${index + 1}. 🕐 ${timeStr}\n`;
+        message += `${todayFeedings.length - index}. 🕐 ${timeStr}\n`;
         message += `   ${username} дал ${feeding.amount} грамм ${foodTypeText}\n`;
         
         // Добавляем детали кормления, если они есть
@@ -131,7 +131,7 @@ todayHistoryScene.enter(async (ctx) => {
 
       // Добавляем статистику
       const totalAmount = todayFeedings.reduce((sum, feeding) => sum + feeding.amount, 0);
-      message += `\n📈 Общий объем: ${totalAmount}г`;
+      message += `\n📈 *Общий объем:* ${totalAmount}г`;
       
       // Показываем интервалы между кормлениями
       if (todayFeedings.length > 1) {
@@ -162,7 +162,7 @@ todayHistoryScene.enter(async (ctx) => {
     
     // Получаем статистику
     const stats = await globalDatabase.getStats();
-    message += `\n\n📊 Общая статистика:\n`;
+    message += `\n\n📊 *Общая статистика:*\n`;
     message += `• Всего кормлений: ${stats.totalFeedings}\n`;
     message += `• Пользователей: ${stats.totalUsers}`;
 

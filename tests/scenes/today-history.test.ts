@@ -87,7 +87,7 @@ describe('todayHistoryScene', () => {
       await (todayHistoryScene as any).enterMiddleware()[0](ctx);
       
       expect(ctx.reply).toHaveBeenCalledWith(
-        expect.stringContaining('📅 История кормлений за сегодня'),
+        expect.stringContaining('📅 *История кормлений за сегодня*'),
         expect.any(Object)
       );
       expect(ctx.reply).toHaveBeenCalledWith(
@@ -131,7 +131,7 @@ describe('todayHistoryScene', () => {
       await (todayHistoryScene as any).enterMiddleware()[0](ctx);
       
       expect(ctx.reply).toHaveBeenCalledWith(
-        expect.stringContaining('📅 История кормлений за сегодня'),
+        expect.stringContaining('📅 *История кормлений за сегодня*'),
         expect.any(Object)
       );
       expect(ctx.reply).toHaveBeenCalledWith(

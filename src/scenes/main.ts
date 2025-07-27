@@ -83,7 +83,7 @@ mainScene.hears(/Когда следующее кормление\?/, async (ctx
     const nextFeedingInfo = globalTimerService.getNextFeedingInfo();
     
     if (!nextFeedingInfo.isActive || !nextFeedingInfo.time) {
-      ctx.reply('⏹️ Кормления приостановлены. Чтобы возобновить, нажмите "🍽️ Собачка поел"');
+      ctx.reply('⏹️ Кормления приостановлены.\nЧтобы возобновить, нажмите "🍽️ Собачка поел"');
       return;
     }
     
@@ -104,7 +104,7 @@ mainScene.hears(/Когда следующее кормление\?/, async (ctx
       timeDiffString = `${minutesDiff} мин`;
     }
     
-    ctx.reply(`⏰ Следующее кормление: ${timeString} (через ${timeDiffString})`);
+    ctx.reply(`⏰ Следующее кормление в ${timeString} (через ${timeDiffString})`);
   } catch (error) {
     console.error('Ошибка при получении времени следующего кормления:', error);
     ctx.reply('Произошла ошибка при получении времени следующего кормления. Попробуйте еще раз.');
@@ -181,7 +181,7 @@ mainScene.hears(/🍽️ Собачка поел/, async (ctx) => {
     const foodInfo = `${foodAmount}г ${foodType === 'dry' ? 'сухого' : 'влажного'} корма`;
 
     // Уведомление всех пользователей
-    const message = `🍽️ Собачка вкусно поел!\n` +
+    const message = `🍽️ Собачка вкусно поел!\n\n` +
       `${formatDateTime(toMoscowTime(dbFeeding.timestamp)).replace(', ', ' в ')}\n` +
       `${createUserLink(dbUser)} дал ${foodInfo}\n\n` +
       `⏰ Следующее кормление в ${nextFeedingInfo.time ? toMoscowTime(nextFeedingInfo.time).getHours().toString().padStart(2, '0') + ':' + toMoscowTime(nextFeedingInfo.time).getMinutes().toString().padStart(2, '0') : 'неизвестно'} (через ${intervalText})`;
@@ -306,7 +306,7 @@ mainScene.command('status', async (ctx) => {
     message += `⏰ Интервал кормления: ${intervalText}\n\n`;
     
     if (nextFeeding.isActive && nextFeeding.time) {
-      message += `⏰ Следующее кормление: ${formatDateTime(toMoscowTime(nextFeeding.time))}\n\n`;
+      message += `⏰ Следующее кормление в ${formatDateTime(toMoscowTime(nextFeeding.time))}\n\n`;
     } else {
       message += '⏹️ Кормления приостановлены\n\n';
     }

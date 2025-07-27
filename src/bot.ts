@@ -222,7 +222,7 @@ bot.command('status', async (ctx) => {
     message += `⏰ Интервал кормления: ${TimeParser.formatInterval(nextFeeding.intervalMinutes)}\n\n`;
     
     if (nextFeeding.isActive && nextFeeding.time) {
-      message += `⏰ Следующее кормление: ${formatDateTime(toMoscowTime(nextFeeding.time))}\n`;
+      message += `⏰ Следующее кормление в ${formatDateTime(toMoscowTime(nextFeeding.time))}\n`;
     } else {
       message += '⏹️ Кормления приостановлены\n';
     }
