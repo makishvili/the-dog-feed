@@ -16,8 +16,8 @@ export function getMainKeyboard(showFeedingDetailsButton = false) {
     keyboard.push([`${EMOJIS.FEED} Я покормил`]);
   }
   
-  keyboard.push([`${EMOJIS.SCHEDULE} Управление расписанием`, `${EMOJIS.STOP} Завершить кормления на сегодня`]);
-  keyboard.push([`${EMOJIS.HISTORY} История кормлений`, `${EMOJIS.SETTINGS} Настройки`]);
+  // Добавляем кнопку "другие действия"
+  keyboard.push(['Другие действия']);
   
   return Markup.keyboard(keyboard).resize();
 }
@@ -121,4 +121,15 @@ export function getPaginationKeyboard(currentPage: number, totalPages: number, h
   buttons.push(['🏠 Выйти на главный экран']);
   
   return Markup.keyboard(buttons).resize();
+}
+
+// Клавиатура для других действий
+export function getOtherActionsKeyboard() {
+  return Markup.keyboard([
+    ['⏹️ Завершить кормления на сегодня'],
+    ['📅 Управление расписанием'],
+    ['📋 История кормлений'],
+    ['⚙️ Настройки'],
+    ['🏠 Выйти на главный экран']
+  ]).resize();
 }

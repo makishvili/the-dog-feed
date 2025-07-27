@@ -71,7 +71,8 @@ export const SCENES = {
   FULL_HISTORY: 'full_history',
   EXPORT: 'export',
   SCHEDULE_FEEDING: 'schedule_feeding',
-  SCHEDULED_LIST: 'scheduled_list'
+  SCHEDULED_LIST: 'scheduled_list',
+  OTHER_ACTIONS: 'other_actions'
 };
 
 // Настройки экспорта

@@ -4,8 +4,9 @@ import { BotContext, BotState, DatabaseBotState } from './types';
 import { TimerService } from './services/timer';
 import { MainHandler } from './handlers/main';
 import { DatabaseService } from './services/database';
-import { mainScene, setGlobalServices, setGlobalDatabaseForMain } from './scenes/main';
+import { mainScene, setGlobalServices, setGlobalDatabaseForMain, getOrCreateUser } from './scenes/main';
 import { setGlobalServicesForInterval } from './scenes/interval-settings';
+import { otherActionsScene, setGlobalServicesForOtherActions } from './scenes/other-actions';
 import { todayHistoryScene, setGlobalDatabaseForTodayHistory, setGlobalSchedulerForTodayHistory, setGlobalTimerForTodayHistory } from './scenes/today-history';
 import { settingsScene } from './scenes/settings';
 import { historyScene } from './scenes/history';
@@ -82,6 +83,7 @@ const mainHandler = new MainHandler(timerService, database);
 setGlobalServices(timerService, database);
 setGlobalServicesForInterval(timerService, database);
 setGlobalDatabaseForMain(database);
+setGlobalServicesForOtherActions(timerService, database, getOrCreateUser);
 setGlobalDatabaseForTodayHistory(database);
 setGlobalDatabaseForFoodSettings(database);
 setGlobalDatabaseForFoodTypeSettings(database);
@@ -112,7 +114,8 @@ const stage = new Scenes.Stage<BotContext>([
   fullHistoryScene,
   exportScene,
   scheduleFeedingScene,
-  scheduledListScene
+  scheduledListScene,
+  otherActionsScene
 ]);
 
 // Команда для проверки статистики уведомлений (для администрирования)
