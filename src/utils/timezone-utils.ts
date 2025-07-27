@@ -3,9 +3,9 @@ export function getTimeOffsetInMinutes(
   serverTime: Date,
   userTime: number
 ): number {
-  if (process.env.NODE_ENV === "development") {
+//   if (process.env.NODE_ENV === "development") {
     return 180; // UTC+03:00
-  }
+//   }
   
   // userTime приходит из ctx.message.date и представляет собой timestamp в секундах
   const userTimeMs = userTime * 1000;
