@@ -391,7 +391,7 @@ async function startBot() {
     });
 
     // Глобальные обработчики кнопок
-    bot.hears(/🍽️ Я покормил/, async (ctx) => {
+    bot.hears(/🍽️ Собачка поел/, async (ctx) => {
       await mainHandler.handleFeeding(ctx);
     });
 

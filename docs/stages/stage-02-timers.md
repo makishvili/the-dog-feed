@@ -256,8 +256,8 @@ bot.start((ctx) => {
   );
 });
 
-// Обработка кнопки "Я покормил"
-bot.hears(/🍽️ Я покормил/, (ctx) => {
+// Обработка кнопки "Собачка поел"
+bot.hears(/🍽️ Собачка поел/, (ctx) => {
   const user = getOrCreateUser(
     ctx.from.id,
     ctx.from.username || ctx.from.first_name

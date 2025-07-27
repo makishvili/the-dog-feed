@@ -15,7 +15,7 @@ export class MainHandler {
     this.database = database;
   }
 
-  // Обработка кнопки "Я покормил"
+  // Обработка кнопки "Собачка поел"
   async handleFeeding(ctx: BotContext): Promise<void> {
     try {
       const user = await this.getOrCreateUser(
@@ -74,7 +74,7 @@ export class MainHandler {
 
       const message = `${MESSAGES.FEEDINGS_STOPPED}\n` +
         `Инициатор: ${user.username || 'Пользователь'}\n\n` +
-        `Чтобы возобновить кормления, нажмите "🍽️ Я покормил"`;
+        `Чтобы возобновить кормления, нажмите "🍽️ Собачка поел"`;
 
       // Уведомление всех пользователей через NotificationService
       const notificationService = this.timerService.getNotificationService();

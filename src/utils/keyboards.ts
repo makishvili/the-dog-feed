@@ -11,9 +11,9 @@ export function getMainKeyboard(showFeedingDetailsButton = false) {
   }
   
   // Основные кнопки
-  // Если показываем кнопку уточнения деталей, то кнопка "Я покормил" не нужна
+  // Если показываем кнопку уточнения деталей, то кнопка "Собачка поел" не нужна
   if (!showFeedingDetailsButton) {
-    keyboard.push([`${EMOJIS.FEED} Я покормил`]);
+    keyboard.push([`${EMOJIS.FEED} Собачка поел`]);
   }
   
   // Добавляем кнопку "другие действия"
