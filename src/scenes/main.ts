@@ -88,7 +88,7 @@ mainScene.hears(/Когда следующее кормление\?/, async (ctx
     }
     
     // Форматирование времени следующего кормления
-    const nextFeedingTime = nextFeedingInfo.time;
+    const nextFeedingTime = toMoscowTime(nextFeedingInfo.time);
     const timeString = nextFeedingTime.getHours().toString().padStart(2, '0') + ':' + nextFeedingTime.getMinutes().toString().padStart(2, '0');
     
     // Вычисление времени до следующего кормления
@@ -184,7 +184,7 @@ mainScene.hears(/🍽️ Собачка поел/, async (ctx) => {
     const message = `🍽️ Собачка вкусно поел!\n` +
       `${formatDateTime(toMoscowTime(dbFeeding.timestamp)).replace(', ', ' в ')}\n` +
       `${createUserLink(dbUser)} дал ${foodInfo}\n\n` +
-      `⏰ Следующее кормление в ${nextFeedingInfo.time ? nextFeedingInfo.time.getHours().toString().padStart(2, '0') + ':' + nextFeedingInfo.time.getMinutes().toString().padStart(2, '0') : 'неизвестно'} (через ${intervalText})`;
+      `⏰ Следующее кормление в ${nextFeedingInfo.time ? toMoscowTime(nextFeedingInfo.time).getHours().toString().padStart(2, '0') + ':' + toMoscowTime(nextFeedingInfo.time).getMinutes().toString().padStart(2, '0') : 'неизвестно'} (через ${intervalText})`;
 
     // Получаем всех пользователей из базы данных для уведомлений
     const allUsers = await globalDatabase.getAllUsers();
