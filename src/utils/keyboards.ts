@@ -33,7 +33,7 @@ export function getSettingsKeyboard() {
 // Клавиатура истории
 export function getHistoryKeyboard() {
   return Markup.keyboard([
-    ['📅 Сегодня', '📋 Все кормления'],
+    ['📅 сегодня', '📋 всё время'],
     ['🏠 На главную']
   ]).resize();
 }

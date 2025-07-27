@@ -12,11 +12,11 @@ historyScene.enter((ctx) => {
 });
 
 // Переход к истории за сегодня
-historyScene.hears(/📅 Сегодня/, (ctx) => {
+historyScene.hears(/📅 сегодня/, (ctx) => {
   ctx.scene.enter(SCENES.TODAY_HISTORY);
 });
 
-historyScene.hears(/📋 Все кормления/, (ctx) => {
+historyScene.hears(/📋 всё время/, (ctx) => {
   ctx.scene.enter(SCENES.FULL_HISTORY);
 });
 
