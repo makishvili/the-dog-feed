@@ -92,7 +92,7 @@ mainScene.hears(/Когда следующее кормление\?/, async (ctx
     const timeString = nextFeedingTime.getHours().toString().padStart(2, '0') + ':' + nextFeedingTime.getMinutes().toString().padStart(2, '0');
     
     // Вычисление времени до следующего кормления
-    const now = new Date();
+    const now = toMoscowTime(new Date());
     const timeDiff = nextFeedingTime.getTime() - now.getTime();
     const hoursDiff = Math.floor(timeDiff / (1000 * 60 * 60));
     const minutesDiff = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
