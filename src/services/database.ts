@@ -1024,6 +1024,45 @@ export class DatabaseService {
         });
     }
 
+    // Метод для очистки всех данных в базе (для тестирования и обслуживания)
+    async clearAllData(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.db.serialize(() => {
+                try {
+                    // Отключаем проверку внешних ключей для безопасного удаления данных
+                    this.db.run('PRAGMA foreign_keys = OFF');
+                    
+                    // Начинаем транзакцию
+                    this.db.run('BEGIN TRANSACTION');
+                    
+                    // Очищаем таблицы в правильном порядке
+                    this.db.run('DELETE FROM feedings');
+                    this.db.run('DELETE FROM scheduled_feedings');
+                    this.db.run('DELETE FROM settings');
+                    this.db.run('DELETE FROM users');
+                    
+                    // Сбрасываем автоинкрементные счетчики
+                    this.db.run('DELETE FROM sqlite_sequence WHERE name IN (\'users\', \'feedings\', \'settings\', \'scheduled_feedings\')');
+                    
+                    // Фиксируем транзакцию
+                    this.db.run('COMMIT');
+                    
+                    // Включаем проверку внешних ключей обратно
+                    this.db.run('PRAGMA foreign_keys = ON');
+                    
+                    // Инициализируем стандартные настройки
+                    this.initializeDefaultSettings()
+                        .then(() => resolve())
+                        .catch(reject);
+                } catch (error) {
+                    // Откатываем транзакцию в случае ошибки
+                    this.db.run('ROLLBACK');
+                    reject(error);
+                }
+            });
+        });
+    }
+
     // Очистка старых неактивных запланированных кормлений (старше 30 дней)
     async cleanupOldScheduledFeedings(): Promise<number> {
         return new Promise((resolve, reject) => {
