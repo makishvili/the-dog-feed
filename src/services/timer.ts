@@ -3,7 +3,6 @@ import { BotContext } from '../types';
 import { DEFAULT_FEEDING_INTERVAL_MINUTES } from '../utils/constants';
 import { NotificationService } from './notifications';
 import { DatabaseService } from './database';
-import { toMoscowTime } from '../utils/time-utils';
 
 export interface TimerState {
   nextFeedingTime: Date | null;

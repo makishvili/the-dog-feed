@@ -3,7 +3,7 @@ import { BotContext, User, Feeding } from '../types';
 import { DatabaseService } from '../services/database';
 import { getMainKeyboard } from '../utils/keyboards';
 import { MESSAGES, SCENES } from '../utils/constants';
-import { toMoscowTime, formatDateTime } from '../utils/time-utils';
+import { formatDateTime } from '../utils/time-utils';
 import { createUserLink } from '../utils/user-utils';
 
 export const mainScene = new Scenes.BaseScene<BotContext>(SCENES.MAIN);
@@ -88,11 +88,11 @@ mainScene.hears(/Когда следующее кормление\?/, async (ctx
     }
     
     // Форматирование времени следующего кормления
-    const nextFeedingTime = toMoscowTime(nextFeedingInfo.time);
+    const nextFeedingTime = nextFeedingInfo.time;
     const timeString = nextFeedingTime.getHours().toString().padStart(2, '0') + ':' + nextFeedingTime.getMinutes().toString().padStart(2, '0');
     
     // Вычисление времени до следующего кормления
-    const now = toMoscowTime(new Date());
+    const now = new Date();
     const timeDiff = nextFeedingTime.getTime() - now.getTime();
     const hoursDiff = Math.floor(timeDiff / (1000 * 60 * 60));
     const minutesDiff = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
@@ -182,9 +182,9 @@ mainScene.hears(/🍽️ Собачка поел/, async (ctx) => {
 
     // Уведомление всех пользователей
     const message = `🍽️ Собачка вкусно поел!\n\n` +
-      `${formatDateTime(toMoscowTime(dbFeeding.timestamp)).replace(', ', ' в ')}\n` +
+      `${formatDateTime(dbFeeding.timestamp).replace(', ', ' в ')}\n` +
       `${createUserLink(dbUser)} дал ${foodInfo}\n\n` +
-      `⏰ Следующее кормление в ${nextFeedingInfo.time ? toMoscowTime(nextFeedingInfo.time).getHours().toString().padStart(2, '0') + ':' + toMoscowTime(nextFeedingInfo.time).getMinutes().toString().padStart(2, '0') : 'неизвестно'} (через ${intervalText})`;
+      `⏰ Следующее кормление в ${nextFeedingInfo.time ? nextFeedingInfo.time.getHours().toString().padStart(2, '0') + ':' + nextFeedingInfo.time.getMinutes().toString().padStart(2, '0') : 'неизвестно'} (через ${intervalText})`;
 
     // Получаем всех пользователей из базы данных для уведомлений
     const allUsers = await globalDatabase.getAllUsers();
@@ -203,7 +203,7 @@ mainScene.hears(/🍽️ Собачка поел/, async (ctx) => {
       }
     }
 
-    console.log(`Кормление записано в БД: ${dbUser.username} в ${toMoscowTime(dbFeeding.timestamp)}`);
+    console.log(`Кормление записано в БД: ${dbUser.username} в ${dbFeeding.timestamp}`);
 
     // Показываем сообщение об успешном кормлении и обновляем клавиатуру
     await ctx.reply(message, getMainKeyboard(true));
@@ -282,7 +282,7 @@ mainScene.command('status', async (ctx) => {
       const lastUser = await globalDatabase.getUserById(lastFeeding.userId);
       const username = createUserLink(lastUser);
       message += `🍽️ Последнее кормление:\n`;
-      message += `   Время: ${formatDateTime(toMoscowTime(lastFeeding.timestamp))}\n`;
+      message += `   Время: ${formatDateTime(lastFeeding.timestamp)}\n`;
       message += `   Кто: ${username}\n\n`;
     } else {
       message += `🍽️ Кормлений еще не было\n\n`;
@@ -306,7 +306,7 @@ mainScene.command('status', async (ctx) => {
     message += `⏰ Интервал кормления: ${intervalText}\n\n`;
     
     if (nextFeeding.isActive && nextFeeding.time) {
-      message += `⏰ Следующее кормление в ${formatDateTime(toMoscowTime(nextFeeding.time))}\n\n`;
+      message += `⏰ Следующее кормление в ${formatDateTime(nextFeeding.time)}\n\n`;
     } else {
       message += '⏹️ Кормления приостановлены\n\n';
     }

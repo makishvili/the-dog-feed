@@ -4,7 +4,7 @@ import { SCENES } from '../utils/constants';
 import { DatabaseService, DatabaseFeeding, DatabaseUser } from '../services/database';
 import { ScheduledFeeding } from '../services/scheduler';
 import { TimerService } from '../services/timer';
-import { toMoscowTime, formatDateTime } from '../utils/time-utils';
+import { formatDateTime } from '../utils/time-utils';
 import { createUserLink } from '../utils/user-utils';
 
 export const todayHistoryScene = new Scenes.BaseScene<BotContext>(SCENES.TODAY_HISTORY);
@@ -112,7 +112,7 @@ todayHistoryScene.enter(async (ctx) => {
       todayFeedings.forEach((feeding, index) => {
         const user = usersMap.get(feeding.userId) || null;
         const username = createUserLink(user);
-        const timeStr = formatDateTime(toMoscowTime(feeding.timestamp));
+        const timeStr = formatDateTime(feeding.timestamp);
         
         // Форматируем запись в соответствии с запросом пользователя
         const foodTypeText = feeding.foodType === 'dry' ? 'сухого' : 'мокрого';
@@ -225,7 +225,7 @@ todayHistoryScene.command('status', async (ctx) => {
       const lastUser = await globalDatabase.getUserByTelegramId(ctx.from?.id || 0);
       const username = createUserLink(lastUser);
       message += `🍽️ Последнее кормление:\n`;
-      const formattedTime = formatDateTime(toMoscowTime(lastFeeding.timestamp));
+      const formattedTime = formatDateTime(lastFeeding.timestamp);
       
       message += `   Время: ${formattedTime}\n`;
       message += `   Кто: ${username}\n\n`;

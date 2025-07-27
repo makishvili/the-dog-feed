@@ -5,7 +5,7 @@ import { MESSAGES, SCENES } from '../utils/constants';
 import { SchedulerService } from '../services/scheduler';
 import { DatabaseService } from '../services/database';
 import { User } from '../types';
-import { toMoscowTime, formatDateTime } from '../utils/time-utils';
+import { formatDateTime } from '../utils/time-utils';
 import { createUserLink } from '../utils/user-utils';
 import { getOrCreateUser } from './main';
 
@@ -159,7 +159,7 @@ scheduleFeedingScene.on('text', async (ctx) => {
     // Отправляем подтверждение
     ctx.reply(
       `${MESSAGES.SCHEDULE_FEEDING_SUCCESS}\n\n` +
-      `📅 Время: ${formatDateTime(toMoscowTime(scheduledTime))}\n` +
+      `📅 Время: ${formatDateTime(scheduledTime)}\n` +
       `👤 Создал: ${username}\n` +
       `🆔 ID: ${schedule.id}\n\n` +
       `Уведомление будет отправлено в назначенное время.`,

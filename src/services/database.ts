@@ -343,23 +343,18 @@ export class DatabaseService {
 
   async getTodayFeedings(): Promise<DatabaseFeeding[]> {
     return new Promise((resolve, reject) => {
-      // Получаем начало и конец сегодняшнего дня в московском времени
+      // Получаем начало и конец сегодняшнего дня в UTC
       const now = new Date();
-      const moscowNow = new Date(now.getTime() + (3 * 60 * 60 * 1000));
-      const startOfDay = new Date(moscowNow.getFullYear(), moscowNow.getMonth(), moscowNow.getDate());
+      const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
       const endOfDay = new Date(startOfDay);
-      endOfDay.setDate(endOfDay.getDate() + 1);
-      
-      // Конвертируем обратно в UTC для запроса к базе данных
-      const startOfDayUTC = new Date(startOfDay.getTime() - (3 * 60 * 60 * 1000));
-      const endOfDayUTC = new Date(endOfDay.getTime() - (3 * 60 * 60 * 1000));
+      endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
       
       this.db.all(`
         SELECT id, user_id, timestamp, food_type, amount, details
         FROM feedings
         WHERE timestamp >= ? AND timestamp < ?
         ORDER BY timestamp DESC
-      `, [startOfDayUTC.toISOString(), endOfDayUTC.toISOString()], (err, rows: any[]) => {
+      `, [startOfDay.toISOString(), endOfDay.toISOString()], (err, rows: any[]) => {
         if (err) {
           reject(err);
         } else {
@@ -535,19 +530,14 @@ export class DatabaseService {
           }
         });
 
-        // Получаем начало и конец сегодняшнего дня в московском времени
+        // Получаем начало и конец сегодняшнего дня в UTC
         const now = new Date();
-        const moscowNow = new Date(now.getTime() + (3 * 60 * 60 * 1000));
-        const startOfDay = new Date(moscowNow.getFullYear(), moscowNow.getMonth(), moscowNow.getDate());
+        const startOfDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
         const endOfDay = new Date(startOfDay);
-        endOfDay.setDate(endOfDay.getDate() + 1);
-        
-        // Конвертируем обратно в UTC для запроса к базе данных
-        const startOfDayUTC = new Date(startOfDay.getTime() - (3 * 60 * 60 * 1000));
-        const endOfDayUTC = new Date(endOfDay.getTime() - (3 * 60 * 60 * 1000));
+        endOfDay.setUTCDate(endOfDay.getUTCDate() + 1);
         
         this.db.get('SELECT COUNT(*) as count FROM feedings WHERE timestamp >= ? AND timestamp < ?',
-          [startOfDayUTC.toISOString(), endOfDayUTC.toISOString()], (err, row: any) => {
+          [startOfDay.toISOString(), endOfDay.toISOString()], (err, row: any) => {
           if (err) reject(err);
           else {
             todayFeedings = row.count;

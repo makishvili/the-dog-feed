@@ -20,7 +20,7 @@ import { fullHistoryScene, setGlobalSchedulerForFullHistory, setGlobalTimerForFu
 import { SchedulerService } from './services/scheduler';
 import { SCENES } from './utils/constants';
 import { TimeParser } from './services/parser';
-import { toMoscowTime, formatDateTime } from './utils/time-utils';
+import { formatDateTime } from './utils/time-utils';
 import { createUserLink } from './utils/user-utils';
 
 // Загрузка переменных окружения
@@ -152,7 +152,7 @@ bot.command('scheduler', async (ctx) => {
     
     if (stats.nextSchedule) {
       message += `⏰ Следующее кормление:\n`;
-      message += `  📅 ${formatDateTime(toMoscowTime(stats.nextSchedule.scheduledTime))}\n`;
+      message += `  📅 ${formatDateTime(stats.nextSchedule.scheduledTime)}\n`;
       message += `  🆔 ID: ${stats.nextSchedule.id}\n`;
       
       const user = await database.getUserById(stats.nextSchedule.createdBy);
@@ -213,7 +213,7 @@ bot.command('status', async (ctx) => {
     if (lastFeeding) {
       const lastUser = await database.getUserByTelegramId(ctx.from?.id || 0);
       message += `🍽️ Последнее кормление:\n`;
-      message += `   Время: ${formatDateTime(toMoscowTime(lastFeeding.timestamp))}\n`;
+      message += `   Время: ${formatDateTime(lastFeeding.timestamp)}\n`;
       message += `   Кто: ${lastUser?.username || 'Неизвестно'}\n\n`;
     } else {
       message += `🍽️ Кормлений еще не было\n\n`;
@@ -222,7 +222,7 @@ bot.command('status', async (ctx) => {
     message += `⏰ Интервал кормления: ${TimeParser.formatInterval(nextFeeding.intervalMinutes)}\n\n`;
     
     if (nextFeeding.isActive && nextFeeding.time) {
-      message += `⏰ Следующее кормление в ${formatDateTime(toMoscowTime(nextFeeding.time))}\n`;
+      message += `⏰ Следующее кормление в ${formatDateTime(nextFeeding.time)}\n`;
     } else {
       message += '⏹️ Кормления приостановлены\n';
     }
@@ -230,7 +230,7 @@ bot.command('status', async (ctx) => {
     // Добавляем информацию о запланированных кормлениях
     if (nextScheduled) {
       message += `\n📅 Запланированное кормление:\n`;
-      message += `   Время: ${formatDateTime(toMoscowTime(nextScheduled.scheduledTime))}\n`;
+      message += `   Время: ${formatDateTime(nextScheduled.scheduledTime)}\n`;
       message += `   ID: ${nextScheduled.id}\n`;
       
       const scheduleUser = await database.getUserById(nextScheduled.createdBy);
