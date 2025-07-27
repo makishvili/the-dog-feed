@@ -40,6 +40,10 @@ export class FeedingParser {
       if (result.isValid) {
         return result;
       }
+      // Если парсер вернул ошибку валидации, возвращаем её
+      if (result.error) {
+        return result;
+      }
     }
 
     // Если не удалось распарсить как количество/тип, сохраняем как текст
