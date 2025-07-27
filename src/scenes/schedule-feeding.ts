@@ -138,6 +138,12 @@ scheduleFeedingScene.on('text', async (ctx) => {
       ctx.from!.username || ctx.from!.first_name
     );
     
+    // Получаем пользователя из базы данных для получения часового пояса
+    let dbUser = null;
+    if (globalDatabase) {
+      dbUser = await globalDatabase.getUserByTelegramId(ctx.from!.id);
+    }
+    
     // Планируем кормление с правильным ID пользователя
     const schedule = await globalSchedulerService.scheduleFeeding(
       scheduledTime,
@@ -145,7 +151,7 @@ scheduleFeedingScene.on('text', async (ctx) => {
     );
     
     // Создаем объект, соответствующий интерфейсу DatabaseUser
-    const dbUser = {
+    const dbUserForLink = {
       id: user.id,
       telegramId: user.telegramId,
       username: user.username,
@@ -154,12 +160,12 @@ scheduleFeedingScene.on('text', async (ctx) => {
       createdAt: new Date()
     };
     
-    const username = createUserLink(dbUser);
+    const username = createUserLink(dbUserForLink);
     
     // Отправляем подтверждение
     ctx.reply(
       `${MESSAGES.SCHEDULE_FEEDING_SUCCESS}\n\n` +
-      `📅 Время: ${formatDateTime(scheduledTime)}\n` +
+      `📅 Время: ${formatDateTime(scheduledTime, dbUser?.timezone)}\n` +
       `👤 Создал: ${username}\n` +
       `🆔 ID: ${schedule.id}\n\n` +
       `Уведомление будет отправлено в назначенное время.`,

@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node dist/bot.js",
     "start:prod": "NODE_ENV=production node dist/bot.js",
-    "dev": "NODE_ENV=development ts-node-dev --respawn --transpile-only src/bot.ts",
+    "dev": "TZ=UTC NODE_ENV=development ts-node-dev --respawn --transpile-only src/bot.ts",
     "dev:ts": "ts-node src/bot.ts",
     "build": "tsc",
     "clean": "rm -rf dist",

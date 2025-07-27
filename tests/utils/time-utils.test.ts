@@ -33,5 +33,37 @@ describe('time-utils', () => {
       // Restore original function
       date.getMonth = originalGetMonth;
     });
+
+    it('should format date with timezone - Moscow', () => {
+      // Create a date in UTC
+      const date = new Date('2023-07-26T01:23:00Z');
+      
+      // Mock getMonth to return July (6)
+      const originalGetMonth = date.getMonth;
+      date.getMonth = jest.fn(() => 6);
+      
+      const formatted = formatDateTime(date, 'Europe/Moscow');
+      
+      expect(formatted).toBe('26 июля в 04:23');
+      
+      // Restore original function
+      date.getMonth = originalGetMonth;
+    });
+
+    it('should format date with timezone - New York', () => {
+      // Create a date in UTC
+      const date = new Date('2023-07-26T01:23:00Z');
+      
+      // Mock getMonth to return July (6)
+      const originalGetMonth = date.getMonth;
+      date.getMonth = jest.fn(() => 6);
+      
+      const formatted = formatDateTime(date, 'America/New_York');
+      
+      expect(formatted).toBe('25 июля в 21:23');
+      
+      // Restore original function
+      date.getMonth = originalGetMonth;
+    });
   });
 });

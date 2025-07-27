@@ -22,6 +22,7 @@ import { SCENES } from './utils/constants';
 import { TimeParser } from './services/parser';
 import { formatDateTime } from './utils/time-utils';
 import { createUserLink } from './utils/user-utils';
+import { getTimeOffsetInMinutes, getTimezoneByOffset } from './utils/timezone-utils';
 
 // Загрузка переменных окружения
 dotenv.config();
@@ -108,7 +109,7 @@ const stage = new Scenes.Stage<BotContext>([
   exportScene,
   scheduleFeedingScene,
   scheduledListScene,
-  otherActionsScene
+  otherActionsScene,
 ]);
 
 // Команда для проверки статистики уведомлений (для администрирования)
@@ -152,10 +153,9 @@ bot.command('scheduler', async (ctx) => {
     
     if (stats.nextSchedule) {
       message += `⏰ Следующее кормление:\n`;
-      message += `  📅 ${formatDateTime(stats.nextSchedule.scheduledTime)}\n`;
-      message += `  🆔 ID: ${stats.nextSchedule.id}\n`;
-      
       const user = await database.getUserById(stats.nextSchedule.createdBy);
+      message += `  📅 ${formatDateTime(stats.nextSchedule.scheduledTime, user?.timezone)}\n`;
+      message += `  🆔 ID: ${stats.nextSchedule.id}\n`;
       message += `  👤 Создал: ${createUserLink(user)}\n`;
     } else {
       message += `⏰ Нет запланированных кормлений`;
@@ -170,14 +170,44 @@ bot.command('scheduler', async (ctx) => {
 
 // Middleware для сессий и сцен
 bot.use(session());
+bot.use(stage.middleware());
 
 // Middleware для установки database в контексте
 bot.use((ctx, next) => {
   ctx.database = database;
   return next();
 });
-
-bot.use(stage.middleware());
+  
+  // Middleware для автоматического определения и сохранения часового пояса пользователя
+  bot.use(async (ctx, next) => {
+    // Проверяем, что это текстовое сообщение и есть ctx.message.date
+    if (ctx.message && ctx.message.date && ctx.from && ctx.database) {
+      try {
+        // Получаем пользователя из базы данных
+        let dbUser = await ctx.database.getUserByTelegramId(ctx.from.id);
+        
+        console.log('dbUser.timezone = ', dbUser.timezone)
+        if (dbUser) {
+          // Определяем разницу во времени
+          const serverTime = new Date(); // Текущее время на сервере (UTC)
+          const userTime = ctx.message.date; // Локальное время пользователя
+          
+          const offsetMinutes = getTimeOffsetInMinutes(serverTime, userTime);
+          const timezone = getTimezoneByOffset(offsetMinutes);
+          
+          // Если удалось определить часовой пояс, сохраняем его
+          if (timezone) {
+            await ctx.database.updateUserTimezone(dbUser.id, timezone);
+            console.log(`Автоматически определен и сохранен часовой пояс для пользователя ${dbUser.username || dbUser.telegramId}: ${timezone}`);
+          }
+        }
+      } catch (error) {
+        console.error('Ошибка при определении часового пояса пользователя:', error);
+      }
+    }
+    
+    return next();
+  });
 
 // Команды, которые используют сцены (должны быть ПОСЛЕ middleware)
 // Команда /start - переход к главной сцене
@@ -210,11 +240,13 @@ bot.command('status', async (ctx) => {
     
     let message = '📊 Статус кормления:\n\n';
     
+    // Получаем пользователя для определения его часового пояса
+    const dbUser = await database.getUserByTelegramId(ctx.from?.id || 0);
+    
     if (lastFeeding) {
-      const lastUser = await database.getUserByTelegramId(ctx.from?.id || 0);
       message += `🍽️ Последнее кормление:\n`;
-      message += `   Время: ${formatDateTime(lastFeeding.timestamp)}\n`;
-      message += `   Кто: ${lastUser?.username || 'Неизвестно'}\n\n`;
+      message += `   Время: ${formatDateTime(lastFeeding.timestamp, dbUser?.timezone)}\n`;
+      message += `   Кто: ${ctx.from?.username || 'Неизвестно'}\n\n`;
     } else {
       message += `🍽️ Кормлений еще не было\n\n`;
     }
@@ -222,7 +254,7 @@ bot.command('status', async (ctx) => {
     message += `⏰ Интервал кормления: ${TimeParser.formatInterval(nextFeeding.intervalMinutes)}\n\n`;
     
     if (nextFeeding.isActive && nextFeeding.time) {
-      message += `⏰ Следующее кормление в ${formatDateTime(nextFeeding.time)}\n`;
+      message += `⏰ Следующее кормление в ${formatDateTime(nextFeeding.time, dbUser?.timezone)}\n`;
     } else {
       message += '⏹️ Кормления приостановлены\n';
     }
@@ -230,10 +262,9 @@ bot.command('status', async (ctx) => {
     // Добавляем информацию о запланированных кормлениях
     if (nextScheduled) {
       message += `\n📅 Запланированное кормление:\n`;
-      message += `   Время: ${formatDateTime(nextScheduled.scheduledTime)}\n`;
-      message += `   ID: ${nextScheduled.id}\n`;
-      
       const scheduleUser = await database.getUserById(nextScheduled.createdBy);
+      message += `   Время: ${formatDateTime(nextScheduled.scheduledTime, scheduleUser?.timezone)}\n`;
+      message += `   ID: ${nextScheduled.id}\n`;
       message += `   Создал: ${createUserLink(scheduleUser)}\n`;
     }
 

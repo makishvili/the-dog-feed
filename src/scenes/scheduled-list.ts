@@ -51,8 +51,8 @@ async function showScheduledList(ctx: BotContext) {
       const user = await ctx.database.getUserById(schedule.createdBy);
       const username = createUserLink(user);
       
-      const scheduledTime = formatDateTime(schedule.scheduledTime);
-      const createdTime = formatDateTime(schedule.createdAt);
+      const scheduledTime = formatDateTime(schedule.scheduledTime, user?.timezone);
+      const createdTime = formatDateTime(schedule.createdAt, user?.timezone);
       
       // Рассчитываем время до кормления
       const now = new Date();
@@ -159,10 +159,16 @@ scheduledListScene.hears(/❌ Отменить кормление (\d+)/, async 
     
     const username = createUserLink(dbUser);
     
+    // Получаем пользователя из базы данных для получения часового пояса
+    let cancellingUser = null;
+    if (ctx.database) {
+      cancellingUser = await ctx.database.getUserByTelegramId(ctx.from!.id);
+    }
+    
     ctx.reply(
       `✅ Кормление отменено!\n\n` +
       `🆔 ID: ${scheduleId}\n` +
-      `📅 Было запланировано на: ${formatDateTime(schedule.scheduledTime)}\n` +
+      `📅 Было запланировано на: ${formatDateTime(schedule.scheduledTime, cancellingUser?.timezone)}\n` +
       `👤 Отменил: ${username}`
     );
     
@@ -170,7 +176,7 @@ scheduledListScene.hears(/❌ Отменить кормление (\d+)/, async 
     const notificationService = globalSchedulerService['timerService'].getNotificationService();
     const notificationMessage =
       `❌ Отменено запланированное кормление\n\n` +
-      `⏰ Время: ${formatDateTime(schedule.scheduledTime)}\n` +
+      `⏰ Время: ${formatDateTime(schedule.scheduledTime, cancellingUser?.timezone)}\n` +
       `👤 Отменил: ${username}`;
     
     await notificationService.sendToAll(notificationMessage, { excludeUser: ctx.from?.id || 0 });

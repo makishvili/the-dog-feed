@@ -73,7 +73,7 @@ todayHistoryScene.enter(async (ctx) => {
             const user = usersMap.get(schedule.createdBy) || null;
             const username = createUserLink(user);
             
-            const scheduledTime = formatDateTime(schedule.scheduledTime);
+            const scheduledTime = formatDateTime(schedule.scheduledTime, user?.timezone);
             
             // Рассчитываем время до кормления
             const timeUntil = schedule.scheduledTime.getTime() - now.getTime();
@@ -112,7 +112,7 @@ todayHistoryScene.enter(async (ctx) => {
       todayFeedings.forEach((feeding, index) => {
         const user = usersMap.get(feeding.userId) || null;
         const username = createUserLink(user);
-        const timeStr = formatDateTime(feeding.timestamp);
+        const timeStr = formatDateTime(feeding.timestamp, user?.timezone);
         
         // Форматируем запись в соответствии с запросом пользователя
         const foodTypeText = feeding.foodType === 'dry' ? 'сухого' : 'мокрого';
@@ -225,7 +225,7 @@ todayHistoryScene.command('status', async (ctx) => {
       const lastUser = await globalDatabase.getUserByTelegramId(ctx.from?.id || 0);
       const username = createUserLink(lastUser);
       message += `🍽️ Последнее кормление:\n`;
-      const formattedTime = formatDateTime(lastFeeding.timestamp);
+      const formattedTime = formatDateTime(lastFeeding.timestamp, lastUser?.timezone);
       
       message += `   Время: ${formattedTime}\n`;
       message += `   Кто: ${username}\n\n`;

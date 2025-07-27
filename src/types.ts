@@ -6,6 +6,7 @@ export interface User {
   username?: string;
   notificationsEnabled: boolean;
   feedingInterval?: number; // добавлено для совместимости с базой данных
+  timezone?: string; // Добавлено для поддержки часовых поясов
 }
 
 export interface Feeding {

@@ -93,7 +93,7 @@ async function showHistoryPage(ctx: BotContext, page: number) {
             const user = await ctx.database.getUserById(schedule.createdBy);
             const username = createUserLink(user);
             
-            const scheduledTime = formatDateTime(schedule.scheduledTime);
+            const scheduledTime = formatDateTime(schedule.scheduledTime, user?.timezone);
             
             // Рассчитываем время до кормления
             const timeUntil = schedule.scheduledTime.getTime() - now.getTime();
@@ -132,7 +132,7 @@ async function showHistoryPage(ctx: BotContext, page: number) {
       const user = await ctx.database.getUserById(feeding.userId);
       const username = createUserLink(user);
       
-      const dateTime = formatDateTime(feeding.timestamp);
+      const dateTime = formatDateTime(feeding.timestamp, user?.timezone);
       
       const foodTypeIcon = feeding.foodType === 'dry' ? '🌾' : '🥫';
       const foodTypeText = feeding.foodType === 'dry' ? 'Сухой' : 'Влажный';

@@ -9,6 +9,7 @@ export interface DatabaseUser {
   username?: string;
   notificationsEnabled: boolean;
   feedingInterval: number;
+  timezone?: string; // Добавлено для поддержки часовых поясов
   createdAt: Date;
 }
 
@@ -129,8 +130,27 @@ export class DatabaseService {
         await this.addColumn('feedings', 'details', 'TEXT');
         console.log('Добавлено поле details в таблицу feedings');
       }
+
+      // Выполняем миграцию для поля timezone
+      await this.addTimezoneMigration();
     } catch (error) {
       console.error('Ошибка выполнения миграций:', error);
+      throw error;
+    }
+  }
+
+  // Добавление миграции для поля timezone
+  private async addTimezoneMigration(): Promise<void> {
+    try {
+      // Проверяем, есть ли поле timezone в таблице users
+      const checkTimezoneColumn = await this.checkColumnExists('users', 'timezone');
+      
+      if (!checkTimezoneColumn) {
+        await this.addColumn('users', 'timezone', 'TEXT');
+        console.log('Добавлено поле timezone в таблицу users');
+      }
+    } catch (error) {
+      console.error('Ошибка выполнения миграции для timezone:', error);
       throw error;
     }
   }
@@ -186,16 +206,16 @@ export class DatabaseService {
   }
 
   // Методы для работы с пользователями
-  async createUser(telegramId: number, username?: string): Promise<DatabaseUser> {
+  async createUser(telegramId: number, username?: string, timezone?: string): Promise<DatabaseUser> {
     return new Promise((resolve, reject) => {
       const now = new Date();
       
       const stmt = this.db.prepare(`
-        INSERT INTO users (telegram_id, username, notifications_enabled, feeding_interval, created_at)
-        VALUES (?, ?, 1, 210, ?)
+        INSERT INTO users (telegram_id, username, notifications_enabled, feeding_interval, timezone, created_at)
+        VALUES (?, ?, 1, 210, ?, ?)
       `);
       
-      stmt.run([telegramId, username, now.toISOString()], function(err) {
+      stmt.run([telegramId, username, timezone, now.toISOString()], function(err) {
         if (err) {
           reject(err);
         } else {
@@ -205,6 +225,7 @@ export class DatabaseService {
             username,
             notificationsEnabled: true,
             feedingInterval: 210,
+            timezone, // Добавлено
             createdAt: now
           });
         }
@@ -217,7 +238,7 @@ export class DatabaseService {
   async getUserByTelegramId(telegramId: number): Promise<DatabaseUser | null> {
     return new Promise((resolve, reject) => {
       this.db.get(`
-        SELECT id, telegram_id, username, notifications_enabled, feeding_interval, created_at
+        SELECT id, telegram_id, username, notifications_enabled, feeding_interval, timezone, created_at
         FROM users WHERE telegram_id = ?
       `, [telegramId], (err, row: any) => {
         if (err) {
@@ -229,6 +250,7 @@ export class DatabaseService {
             username: row.username,
             notificationsEnabled: Boolean(row.notifications_enabled),
             feedingInterval: row.feeding_interval,
+            timezone: row.timezone, // Добавлено
             createdAt: new Date(row.created_at)
           });
         } else {
@@ -241,7 +263,7 @@ export class DatabaseService {
   async getUserById(userId: number): Promise<DatabaseUser | null> {
     return new Promise((resolve, reject) => {
       this.db.get(`
-        SELECT id, telegram_id, username, notifications_enabled, feeding_interval, created_at
+        SELECT id, telegram_id, username, notifications_enabled, feeding_interval, timezone, created_at
         FROM users WHERE id = ?
       `, [userId], (err, row: any) => {
         if (err) {
@@ -253,6 +275,7 @@ export class DatabaseService {
             username: row.username,
             notificationsEnabled: Boolean(row.notifications_enabled),
             feedingInterval: row.feeding_interval,
+            timezone: row.timezone, // Добавлено
             createdAt: new Date(row.created_at)
           });
         } else {
@@ -290,10 +313,24 @@ export class DatabaseService {
     });
   }
 
+  async updateUserTimezone(userId: number, timezone: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      this.db.run(`
+        UPDATE users SET timezone = ? WHERE id = ?
+      `, [timezone, userId], (err) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
   async getAllUsers(): Promise<DatabaseUser[]> {
     return new Promise((resolve, reject) => {
       this.db.all(`
-        SELECT id, telegram_id, username, notifications_enabled, feeding_interval, created_at
+        SELECT id, telegram_id, username, notifications_enabled, feeding_interval, timezone, created_at
         FROM users
       `, (err, rows: any[]) => {
         if (err) {
@@ -305,6 +342,7 @@ export class DatabaseService {
             username: row.username,
             notificationsEnabled: Boolean(row.notifications_enabled),
             feedingInterval: row.feeding_interval,
+            timezone: row.timezone, // Добавлено
             createdAt: new Date(row.created_at)
           }));
           resolve(users);

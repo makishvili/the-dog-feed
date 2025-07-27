@@ -87,9 +87,18 @@ mainScene.hears(/Когда следующее кормление\?/, async (ctx
       return;
     }
     
-    // Форматирование времени следующего кормления
+    // Проверяем, что globalDatabase инициализирована
+    if (!globalDatabase) {
+      ctx.reply('Ошибка: база данных не инициализирована. Попробуйте перезапустить бота командой /start');
+      return;
+    }
+    
+    // Получаем текущего пользователя для определения его часового пояса
+    const currentUser = await globalDatabase.getUserByTelegramId(ctx.from!.id);
+    
+    // Форматирование времени следующего кормления с учетом часового пояса пользователя
     const nextFeedingTime = nextFeedingInfo.time;
-    const timeString = nextFeedingTime.getHours().toString().padStart(2, '0') + ':' + nextFeedingTime.getMinutes().toString().padStart(2, '0');
+    const timeString = currentUser ? formatDateTime(nextFeedingTime, currentUser.timezone).split(' в ')[1] : nextFeedingTime.getHours().toString().padStart(2, '0') + ':' + nextFeedingTime.getMinutes().toString().padStart(2, '0');
     
     // Вычисление времени до следующего кормления
     const now = new Date();
@@ -182,9 +191,9 @@ mainScene.hears(/🍽️ Собачка поел/, async (ctx) => {
 
     // Уведомление всех пользователей
     const message = `🍽️ Собачка вкусно поел!\n\n` +
-      `${formatDateTime(dbFeeding.timestamp).replace(', ', ' в ')}\n` +
+      `${formatDateTime(dbFeeding.timestamp, dbUser?.timezone).replace(', ', ' в ')}\n` +
       `${createUserLink(dbUser)} дал ${foodInfo}\n\n` +
-      `⏰ Следующее кормление в ${nextFeedingInfo.time ? nextFeedingInfo.time.getHours().toString().padStart(2, '0') + ':' + nextFeedingInfo.time.getMinutes().toString().padStart(2, '0') : 'неизвестно'} (через ${intervalText})`;
+      `⏰ Следующее кормление в ${nextFeedingInfo.time ? formatDateTime(nextFeedingInfo.time, dbUser?.timezone).split(' в ')[1] : 'неизвестно'} (через ${intervalText})`;
 
     // Получаем всех пользователей из базы данных для уведомлений
     const allUsers = await globalDatabase.getAllUsers();
@@ -276,13 +285,16 @@ mainScene.command('status', async (ctx) => {
     const lastFeeding = await globalDatabase.getLastFeeding();
     const stats = await globalDatabase.getStats();
     
+    // Получаем текущего пользователя
+    const currentUser = await globalDatabase.getUserByTelegramId(ctx.from!.id);
+    
     let message = '📊 Статус кормления:\n\n';
     
     if (lastFeeding) {
       const lastUser = await globalDatabase.getUserById(lastFeeding.userId);
       const username = createUserLink(lastUser);
       message += `🍽️ Последнее кормление:\n`;
-      message += `   Время: ${formatDateTime(lastFeeding.timestamp)}\n`;
+      message += `   Время: ${formatDateTime(lastFeeding.timestamp, lastUser?.timezone)}\n`;
       message += `   Кто: ${username}\n\n`;
     } else {
       message += `🍽️ Кормлений еще не было\n\n`;
@@ -306,7 +318,7 @@ mainScene.command('status', async (ctx) => {
     message += `⏰ Интервал кормления: ${intervalText}\n\n`;
     
     if (nextFeeding.isActive && nextFeeding.time) {
-      message += `⏰ Следующее кормление в ${formatDateTime(nextFeeding.time)}\n\n`;
+      message += `⏰ Следующее кормление в ${formatDateTime(nextFeeding.time, currentUser?.timezone)}\n\n`;
     } else {
       message += '⏹️ Кормления приостановлены\n\n';
     }

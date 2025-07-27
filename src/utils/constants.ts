@@ -70,7 +70,8 @@ export const SCENES = {
   EXPORT: 'export',
   SCHEDULE_FEEDING: 'schedule_feeding',
   SCHEDULED_LIST: 'scheduled_list',
-  OTHER_ACTIONS: 'other_actions'
+  OTHER_ACTIONS: 'other_actions',
+  TIMEZONE_SETTINGS: 'timezone_settings' // Добавлено для настройки часового пояса
 };
 
 // Настройки экспорта
