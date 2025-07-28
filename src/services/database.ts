@@ -555,7 +555,8 @@ export class DatabaseService {
         feedingId: number,
         amount?: number,
         foodType?: string,
-        details?: string
+        details?: string,
+        timestamp?: Date
     ): Promise<void> {
         return new Promise((resolve, reject) => {
             let query = 'UPDATE feedings SET ';
@@ -575,6 +576,11 @@ export class DatabaseService {
             if (details !== undefined) {
                 updates.push('details = ?');
                 params.push(details);
+            }
+
+            if (timestamp !== undefined) {
+                updates.push('timestamp = ?');
+                params.push(timestamp.toISOString());
             }
 
             if (updates.length === 0) {
