@@ -1,6 +1,6 @@
 import { Scenes, Markup } from 'telegraf';
 import { BotContext } from '../types';
-import { TimeParser } from '../services/parser';
+import { TimeParser } from '../services/time-parser';
 import { SCENES } from '../utils/constants';
 
 export const intervalSettingsScene = new Scenes.BaseScene<BotContext>(

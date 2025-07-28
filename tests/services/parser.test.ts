@@ -1,4 +1,4 @@
-import { TimeParser } from '../../src/services/parser';
+import { TimeParser } from '../../src/services/time-parser';
 
 describe('TimeParser', () => {
     describe('parseInterval', () => {

@@ -52,7 +52,7 @@ import {
 } from './scenes/full-history';
 import { SchedulerService } from './services/scheduler';
 import { SCENES } from './utils/constants';
-import { TimeParser } from './services/parser';
+import { TimeParser } from './services/time-parser';
 import { formatDateTime } from './utils/time-utils';
 import { createUserLink } from './utils/user-utils';
 import {

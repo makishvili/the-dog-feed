@@ -3,7 +3,7 @@ import {
     intervalSettingsScene,
     setGlobalServicesForInterval,
 } from '../../src/scenes/interval-settings';
-import { TimeParser } from '../../src/services/parser';
+import { TimeParser } from '../../src/services/time-parser';
 import { Telegraf } from 'telegraf';
 import { BotContext } from '../../src/types';
 
@@ -106,7 +106,7 @@ describe('intervalSettingsScene', () => {
             ctx.message = { text: 'Invalid interval' };
 
             // Мокаем TimeParser для возврата ошибки
-            jest.mock('../../src/services/parser', () => {
+            jest.mock('../../src/services/time-parser', () => {
                 return {
                     TimeParser: {
                         parseInterval: jest.fn().mockReturnValue({
@@ -133,7 +133,7 @@ describe('intervalSettingsScene', () => {
             ctx.message = { text: '4 часа' };
 
             // Мокаем TimeParser для успешного парсинга
-            jest.mock('../../src/services/parser', () => {
+            jest.mock('../../src/services/time-parser', () => {
                 return {
                     TimeParser: {
                         parseInterval: jest.fn().mockReturnValue({
